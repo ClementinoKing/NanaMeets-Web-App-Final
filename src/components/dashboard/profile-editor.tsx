@@ -18,18 +18,16 @@ import {
   User,
   X,
 } from "lucide-react";
-import type { Database } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { MALAWI_AREAS, MALAWI_DISTRICTS } from "@/lib/malawi-locations";
+import type { CurrentProfileRow } from "@/lib/current-profile";
 import { cn } from "@/lib/utils";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { saveProfileRow } from "@/lib/profile-write";
 import { uploadManyToR2 } from "@/lib/r2";
 import { toast } from "sonner";
-
-type ProfileRow = Database["public"]["Tables"]["profile"]["Row"];
 
 type PhotoSlot = {
   existingUrl: string | null;
@@ -40,7 +38,7 @@ type PhotoSlot = {
 interface ProfileEditorProps {
   userId: string;
   email: string;
-  profile: ProfileRow | null;
+  profile: CurrentProfileRow | null;
 }
 
 function describeSupabaseError(error: unknown) {
