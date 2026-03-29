@@ -419,9 +419,9 @@ export function ProfileEditor({ userId, email, profile }: ProfileEditorProps) {
         return;
       }
 
-      const keepExisting = (nextValue: string, existingValue: string | null) =>
+      const keepExisting = (nextValue: string, existingValue: string | null | undefined) =>
         nextValue.trim() || existingValue || null;
-      const keepExistingArray = (nextValue: string, existingValue: string[] | null) =>
+      const keepExistingArray = (nextValue: string, existingValue: string[] | null | undefined) =>
         nextValue.trim()
           ? nextValue
               .split(",")
