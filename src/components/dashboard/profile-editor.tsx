@@ -282,7 +282,6 @@ export function ProfileEditor({ userId, email, profile }: ProfileEditorProps) {
   const picture2 = profile?.picture2 ?? null;
   const picture3 = profile?.picture3 ?? null;
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fullName, setFullName] = useState(profile?.f_name ?? "");
   const [gender, setGender] = useState(profile?.gender ?? "");
@@ -410,7 +409,6 @@ export function ProfileEditor({ userId, email, profile }: ProfileEditorProps) {
 
   const handleSave = async () => {
     setSaving(true);
-    setSaved(false);
     setError(null);
 
     try {
@@ -475,7 +473,6 @@ export function ProfileEditor({ userId, email, profile }: ProfileEditorProps) {
         picture3: resolvedPhotoUrls[2] ?? null,
       });
 
-      setSaved(true);
       toast.success("Profile updated successfully");
       router.refresh();
     } catch (saveError) {
