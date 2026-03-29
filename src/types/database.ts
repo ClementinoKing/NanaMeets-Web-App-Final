@@ -184,6 +184,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      user_sessions: {
+        Row: {
+          id: number;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+          session_id: string;
+          is_online: boolean;
+          disconnected_at: string | null;
+          device: string | null;
+        };
+        Insert: {
+          id?: number;
+          created_at?: string;
+          updated_at?: string;
+          user_id: string;
+          session_id: string;
+          is_online?: boolean;
+          disconnected_at?: string | null;
+          device?: string | null;
+        };
+        Update: {
+          id?: number;
+          created_at?: string;
+          updated_at?: string;
+          user_id?: string;
+          session_id?: string;
+          is_online?: boolean;
+          disconnected_at?: string | null;
+          device?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

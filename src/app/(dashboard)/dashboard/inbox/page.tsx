@@ -1,8 +1,11 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { MessageComposer } from "@/components/dashboard/message-composer";
+import type { CSSProperties } from "react";
+import { ChatHeader } from "@/components/dashboard/chat/chat-header";
+import { ChatInput } from "@/components/dashboard/chat/chat-input";
+import { MessageList } from "@/components/dashboard/chat/message-list";
 import { fetchMessagesForIdentityIds, fetchProfilesForIdentityIds } from "@/lib/message-feed";
-import { formatUtcDateTime } from "@/lib/date-format";
+import { fetchOnlineUserIds } from "@/lib/presence";
 import { getServerAuthSession } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -13,25 +16,28 @@ interface InboxPageProps {
   }>;
 }
 
-function ConversationAvatar({
-  name,
-  profilePic,
-  className = "h-11 w-11",
-}: {
-  name: string;
-  profilePic: string | null;
-  className?: string;
-}) {
-  return (
-    <div className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/10 ${className}`}>
-      {profilePic ? (
-        <Image alt={name} className="object-cover" fill sizes="56px" src={profilePic} />
-      ) : (
-        <span className="text-xs font-semibold uppercase text-white/80">{name.slice(0, 2)}</span>
-      )}
-    </div>
-  );
-}
+type ProfileRow = Awaited<ReturnType<typeof fetchProfilesForIdentityIds>>[number];
+
+const inboxThemeVars: CSSProperties = {
+  ["--background" as never]: "0 0% 1%",
+  ["--foreground" as never]: "0 0% 98%",
+  ["--card" as never]: "0 0% 8%",
+  ["--card-foreground" as never]: "0 0% 98%",
+  ["--popover" as never]: "0 0% 8%",
+  ["--popover-foreground" as never]: "0 0% 98%",
+  ["--primary" as never]: "347 92% 61%",
+  ["--primary-foreground" as never]: "0 0% 100%",
+  ["--secondary" as never]: "0 0% 12%",
+  ["--secondary-foreground" as never]: "0 0% 98%",
+  ["--muted" as never]: "0 0% 12%",
+  ["--muted-foreground" as never]: "215 10% 70%",
+  ["--accent" as never]: "0 0% 12%",
+  ["--accent-foreground" as never]: "0 0% 98%",
+  ["--destructive" as never]: "15 72% 43%",
+  ["--border" as never]: "0 0% 16%",
+  ["--input" as never]: "0 0% 16%",
+  ["--ring" as never]: "347 92% 61%",
+};
 
 function ProfileBlock({
   label,
@@ -41,9 +47,9 @@ function ProfileBlock({
   value: string | null | undefined;
 }) {
   return (
-    <div className="border-b border-white/10 py-3 last:border-b-0">
-      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-white/35">{label}</p>
-      <p className="mt-1 text-[0.95rem] leading-6 text-white/85">{value || "Not set"}</p>
+    <div className="border-b border-border/70 py-2.5 last:border-b-0">
+      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+      <p className="mt-1 text-[0.92rem] leading-6 text-foreground/90">{value || "Not set"}</p>
     </div>
   );
 }
@@ -52,7 +58,7 @@ function RightRail({
   selectedProfile,
   selectedConversation,
 }: {
-  selectedProfile: NonNullable<Awaited<ReturnType<typeof fetchProfilesForIdentityIds>>>[number] | null;
+  selectedProfile: ProfileRow | null;
   selectedConversation: {
     name: string;
     profilePic: string | null;
@@ -63,74 +69,66 @@ function RightRail({
   const displayAge = selectedProfile?.age ? `, ${selectedProfile.age}` : "";
   const location = [selectedProfile?.city, selectedProfile?.area].filter(Boolean).join(" · ");
   const picture = selectedProfile?.profile_pic ?? selectedConversation?.profilePic ?? null;
-  const secondPicture = selectedProfile?.picture2 ?? null;
-  const thirdPicture = selectedProfile?.picture3 ?? null;
+  const extraPhotos = [selectedProfile?.picture2, selectedProfile?.picture3].filter(Boolean) as string[];
 
   return (
-    <aside className="space-y-4">
-      <div className="overflow-hidden rounded-[1.6rem] bg-[#111] shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-        <div className="flex items-center justify-between px-5 py-4">
-          <h2 className="text-[2rem] font-semibold tracking-tight text-white">
+    <aside className="h-full space-y-3 overflow-y-auto pr-1">
+      <div className="overflow-hidden rounded-[1.35rem] border border-border/70 bg-[#151515] shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+        <div className="px-4 py-3">
+          <h2 className="text-[1.75rem] font-semibold tracking-tight text-foreground">
             {displayName}
             {displayAge}
           </h2>
         </div>
 
-        <div className="grid grid-cols-3 gap-1 bg-[#0d0d0d]">
-          <div className="col-span-3 relative aspect-[3/4] min-h-[360px] bg-[#1a1a1a]">
-            {picture ? (
-              <Image alt={displayName} className="object-cover" fill sizes="(max-width: 1280px) 100vw, 33vw" src={picture} />
-            ) : (
-              <div className="flex h-full items-center justify-center text-white/40">No profile image</div>
-            )}
-          </div>
+        <div className="relative aspect-[3/4] min-h-[300px] bg-[#0f0f0f]">
+          {picture ? (
+            <Image alt={displayName} className="object-cover" fill sizes="(max-width: 1280px) 100vw, 33vw" src={picture} />
+          ) : (
+            <div className="flex h-full items-center justify-center text-muted-foreground">No profile image</div>
+          )}
         </div>
       </div>
 
-      <div className="rounded-[1.6rem] bg-[#111] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-        <div className="flex items-center gap-2 text-white/70">
-          <span className="text-[1.05rem]">Looking for</span>
-        </div>
-        <div className="mt-4 rounded-[1.2rem] bg-white/[0.03] px-4 py-5">
-          <p className="text-[1rem] font-semibold text-white/85">
-            {selectedProfile?.relationship_goals ?? "Not set"}
-          </p>
+      <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+        <p className="text-[0.92rem] font-semibold text-foreground/75">Looking for</p>
+        <div className="mt-3 rounded-[1.1rem] bg-[#101010] px-4 py-4">
+          <p className="text-[0.98rem] font-semibold text-foreground/90">{selectedProfile?.relationship_goals ?? "Not set"}</p>
         </div>
       </div>
 
-      <div className="rounded-[1.6rem] bg-[#111] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-        <p className="flex items-center gap-2 text-[1rem] font-semibold text-white/70">About me</p>
-        <p className="mt-4 text-[0.98rem] leading-7 text-white/85">
-          {selectedProfile?.bio ?? "No bio added yet."}
-        </p>
+      <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+        <p className="text-[0.92rem] font-semibold text-foreground/75">About me</p>
+        <p className="mt-3 text-[0.92rem] leading-6 text-foreground/90">{selectedProfile?.bio ?? "No bio added yet."}</p>
       </div>
 
-      <div className="rounded-[1.6rem] bg-[#111] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-        <p className="flex items-center gap-2 text-[1rem] font-semibold text-white/70">Essentials</p>
-        <div className="mt-3 divide-y divide-white/10">
+      <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+        <p className="text-[0.92rem] font-semibold text-foreground/75">Essentials</p>
+        <div className="mt-2 divide-y divide-white/10">
           <ProfileBlock label="Location" value={location || "Location not set"} />
           <ProfileBlock label="Job title" value={selectedProfile?.job_title} />
           <ProfileBlock label="Company" value={selectedProfile?.company} />
           <ProfileBlock label="Education" value={selectedProfile?.education} />
           <ProfileBlock label="Height" value={selectedProfile?.height ? `${selectedProfile.height} cm` : null} />
-          <ProfileBlock label="Lifestyle" value={[selectedProfile?.drinking, selectedProfile?.smoking, selectedProfile?.workout, selectedProfile?.pets].filter(Boolean).join(" · ") || null} />
+          <ProfileBlock
+            label="Lifestyle"
+            value={[selectedProfile?.drinking, selectedProfile?.smoking, selectedProfile?.workout, selectedProfile?.pets].filter(Boolean).join(" · ") || null}
+          />
         </div>
       </div>
 
-      {(secondPicture || thirdPicture) && (
-        <div className="rounded-[1.6rem] bg-[#111] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
-          <p className="text-[1rem] font-semibold text-white/70">More photos</p>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            {[secondPicture, thirdPicture].map((src, index) => (
-              <div key={index} className="relative aspect-[3/4] overflow-hidden rounded-[1.2rem] bg-white/5">
-                {src ? (
-                  <Image alt={`${displayName} ${index + 2}`} className="object-cover" fill sizes="(max-width: 1280px) 50vw, 16vw" src={src} />
-                ) : null}
+      {extraPhotos.length ? (
+        <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+          <p className="text-[0.92rem] font-semibold text-foreground/75">More photos</p>
+          <div className="mt-3 grid grid-cols-2 gap-2.5">
+            {extraPhotos.map((src, index) => (
+              <div key={src} className="relative aspect-[3/4] overflow-hidden rounded-[1.05rem] bg-[#101010]">
+                <Image alt={`${displayName} ${index + 2}`} className="object-cover" fill sizes="(max-width: 1280px) 50vw, 16vw" src={src} />
               </div>
             ))}
           </div>
         </div>
-      )}
+      ) : null}
     </aside>
   );
 }
@@ -143,8 +141,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
   }
 
   const resolvedSearchParams = (await searchParams) ?? {};
-  const messageIdentityIds = [user.id];
-  const messages = await fetchMessagesForIdentityIds(supabase, messageIdentityIds);
+  const messages = await fetchMessagesForIdentityIds(supabase, [user.id]);
 
   const summaryMap = new Map<
     string,
@@ -159,6 +156,10 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
 
   for (const message of messages ?? []) {
     const otherUserId = message.sender_id === user.id ? message.receiver_id : message.sender_id;
+    if (!otherUserId) {
+      continue;
+    }
+
     const entry = summaryMap.get(otherUserId);
 
     if (entry) {
@@ -180,7 +181,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
 
   const conversations = [...summaryMap.values()]
     .map((conversation) => {
-      const profile = profiles.find((item) => item.user_id === conversation.userId || item.id === conversation.userId);
+      const profile = profiles.find((item) => item.user_id === conversation.userId || item.id === conversation.userId) ?? null;
 
       return {
         ...conversation,
@@ -197,75 +198,38 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
     conversations.find((conversation) => conversation.userId === selectedConversationId) ?? conversations[0] ?? null;
   const selectedMessages = selectedConversation?.messages ?? [];
   const replyRecipientLookup = selectedConversation?.email ?? selectedConversation?.userId ?? "";
-  const latestMessageDate = selectedMessages.length
-    ? selectedMessages[selectedMessages.length - 1]?.created_at ?? selectedConversation?.latestAt ?? ""
-    : selectedConversation?.latestAt ?? "";
+  const onlineUserIds = selectedConversation?.userId
+    ? await fetchOnlineUserIds(supabase, [selectedConversation.userId])
+    : new Set<string>();
+  const selectedIsOnline = Boolean(selectedConversation?.userId && onlineUserIds.has(selectedConversation.userId));
 
   return (
-    <section className="min-h-[calc(100vh-3rem)] bg-black px-0 py-0 text-white">
-      <div className="mx-auto w-full max-w-[1600px] px-4 py-4 lg:px-6">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_420px]">
-          <div className="min-w-0 space-y-4">
-            <div className="flex items-center justify-between rounded-[1.6rem] border border-white/10 bg-[#0f0f0f] px-5 py-4 shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
+    <section
+      className="relative h-[calc(100dvh-3rem)] overflow-hidden bg-gradient-to-br from-[#020202] via-[#050505] to-[#010101] px-0 py-0 text-foreground"
+      style={inboxThemeVars}
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(20,184,166,0.09),_transparent_35%)]" />
+      <div className="relative mx-auto h-full w-full max-w-[1560px] px-3 py-3 lg:px-5">
+        <div className="grid h-full gap-3 xl:grid-cols-[minmax(0,1.45fr)_380px]">
+          <div className="flex min-h-0 min-w-0 flex-col gap-3">
+            <ChatHeader
+              avatarUrl={selectedConversation?.profilePic ?? null}
+              className="rounded-[1.6rem]"
+              name={selectedConversation?.name ?? "Conversation"}
+              online={selectedIsOnline}
+            />
+
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#050505] shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
               {selectedConversation ? (
-                <div className="flex min-w-0 items-center gap-3">
-                  <ConversationAvatar name={selectedConversation.name} profilePic={selectedConversation.profilePic} />
-                  <div className="min-w-0">
-                    <p className="truncate text-[1.05rem] font-semibold text-white/90">
-                      You matched with {selectedConversation.name} on{" "}
-                      {latestMessageDate ? formatUtcDateTime(latestMessageDate).split(",")[0] : "recently"}
-                    </p>
-                    <p className="truncate text-[0.88rem] text-white/45">Open conversation</p>
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <MessageList currentUserId={user.id} messages={selectedMessages} />
+
+                  <div className="shrink-0 border-t border-white/10 bg-[#101010] px-3 py-3 backdrop-blur-xl">
+                    <ChatInput recipientLookup={replyRecipientLookup} placeholder="Type a message..." />
                   </div>
                 </div>
               ) : (
-                <p className="text-[1rem] text-white/60">Select a conversation from the sidebar to get started.</p>
-              )}
-
-              <div className="flex items-center gap-3 text-white/55">
-                <span className="text-2xl leading-none text-[#ff4b6f]">•••</span>
-                <span className="text-3xl leading-none">×</span>
-              </div>
-            </div>
-
-            <div className="min-h-[72vh] rounded-[1.6rem] border border-white/10 bg-[#0f0f0f] shadow-[0_20px_60px_rgba(0,0,0,0.3)]">
-              {selectedConversation ? (
-                <div className="flex min-h-[72vh] flex-col">
-                  <div className="flex-1 space-y-5 px-5 py-5">
-                    {selectedMessages.length ? (
-                      [...selectedMessages].reverse().map((message) => {
-                        const sentByMe = message.sender_id === user.id;
-
-                        return (
-                          <div key={message.id} className={`flex ${sentByMe ? "justify-end" : "justify-start"}`}>
-                            <div
-                              className={`max-w-[78%] rounded-3xl px-4 py-3 shadow-sm ${
-                                sentByMe ? "bg-[#ff4b6f] text-white" : "bg-[#242424] text-white"
-                              }`}
-                            >
-                              <p className="whitespace-pre-wrap text-sm leading-6">{message.message ?? "No message text yet."}</p>
-                              <p className={`mt-2 text-xs ${sentByMe ? "text-white/70" : "text-white/45"}`}>
-                                {formatUtcDateTime(message.created_at)}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-sm text-white/55">This conversation has no messages yet.</p>
-                    )}
-                  </div>
-
-                  <div className="border-t border-white/10 px-4 py-4">
-                    <MessageComposer
-                      key={replyRecipientLookup}
-                      defaultRecipientLookup={replyRecipientLookup}
-                      mode="reply"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex min-h-[72vh] items-center justify-center px-6 text-sm text-white/55">
+                <div className="flex h-full items-center justify-center px-6 text-sm text-muted-foreground">
                   There is no conversation selected yet.
                 </div>
               )}

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { fetchProfilesForIdentityIds } from "@/lib/message-feed";
+import { sendMessage } from "@/lib/send-message";
 import { messageSchema, type MessageValues } from "@/lib/validators/profile";
 
 interface MessageComposerProps {
@@ -52,58 +52,25 @@ export function MessageComposer({ defaultRecipientLookup = "", mode = "compose" 
       return;
     }
 
-    const lookup = (values.recipientLookup || defaultRecipientLookup).trim();
+    try {
+      await sendMessage({
+        supabase,
+        senderId: user.id,
+        recipientLookup: values.recipientLookup || defaultRecipientLookup,
+        message: values.message,
+      });
 
-    if (!lookup) {
-      const errorMessage = "Could not find that user. Try their email address or user ID.";
-      setFormError(errorMessage);
-      toast.error(errorMessage);
-      return;
+      toast.success("Message sent");
+      form.reset({
+        recipientLookup: replyMode ? defaultRecipientLookup : "",
+        message: "",
+      });
+      router.refresh();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not send your message.";
+      setFormError(message);
+      toast.error(message);
     }
-
-    const { data: emailRecipient, error: emailLookupError } = lookup.includes("@")
-      ? await supabase.from("profile").select("id,user_id,f_name,email,profile_pic").eq("email", lookup).maybeSingle()
-      : { data: null, error: null };
-
-    if (emailLookupError) {
-      setFormError(emailLookupError.message);
-      toast.error(emailLookupError.message);
-      return;
-    }
-
-    const recipient =
-      emailRecipient ??
-      (lookup.includes("@") ? null : (await fetchProfilesForIdentityIds(supabase, [lookup]))[0] ?? null);
-
-    if (!recipient) {
-      const errorMessage = "Could not find that user. Try their email address or user ID.";
-      setFormError(errorMessage);
-      toast.error(errorMessage);
-      return;
-    }
-
-    const { error } = await supabase.from("messages").insert({
-      sender_id: user.id,
-      receiver_id: recipient.user_id ?? recipient.id,
-      message: values.message,
-      hangout: false,
-      match: true,
-      unmatch: false,
-      blocked: false,
-    });
-
-    if (error) {
-      setFormError(error.message);
-      toast.error(error.message);
-      return;
-    }
-
-    toast.success("Message sent");
-    form.reset({
-      recipientLookup: replyMode ? defaultRecipientLookup : "",
-      message: "",
-    });
-    router.refresh();
   };
 
   return (
@@ -132,11 +99,13 @@ export function MessageComposer({ defaultRecipientLookup = "", mode = "compose" 
           />
           <Button
             aria-label="Send message"
-            className="h-12 w-12 shrink-0 rounded-full bg-[#ff4b6f] p-0 text-white hover:bg-[#ff5f7f]"
+            className="h-12 w-12 shrink-0 rounded-full bg-primary p-0 text-primary-foreground hover:bg-primary/90"
             disabled={form.formState.isSubmitting}
             type="submit"
           >
-            {form.formState.isSubmitting ? "..." : "➤"}
+            <span className="text-[1.65rem] leading-none">
+              {form.formState.isSubmitting ? "..." : "➤"}
+            </span>
           </Button>
         </div>
       ) : (
