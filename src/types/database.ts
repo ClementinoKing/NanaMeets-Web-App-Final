@@ -154,7 +154,10 @@ export interface Database {
           sender_id: string;
           receiver_id: string;
           message: string | null;
+          hangout: boolean | null;
           match: boolean | null;
+          unmatch: boolean;
+          blocked: boolean;
           created_at: string;
         };
         Insert: {
@@ -162,7 +165,10 @@ export interface Database {
           sender_id: string;
           receiver_id: string;
           message?: string | null;
+          hangout?: boolean | null;
           match?: boolean | null;
+          unmatch?: boolean;
+          blocked?: boolean;
           created_at?: string;
         };
         Update: {
@@ -170,7 +176,10 @@ export interface Database {
           sender_id?: string;
           receiver_id?: string;
           message?: string | null;
+          hangout?: boolean | null;
           match?: boolean | null;
+          unmatch?: boolean;
+          blocked?: boolean;
           created_at?: string;
         };
         Relationships: [];

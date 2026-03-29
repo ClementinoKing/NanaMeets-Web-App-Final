@@ -8,7 +8,33 @@ type MessageRow = Pick<
 
 type ProfileRow = Pick<
   Database["public"]["Tables"]["profile"]["Row"],
-  "id" | "user_id" | "f_name" | "email" | "profile_pic"
+  | "id"
+  | "user_id"
+  | "f_name"
+  | "email"
+  | "profile_pic"
+  | "picture2"
+  | "picture3"
+  | "bio"
+  | "relationship_goals"
+  | "city"
+  | "area"
+  | "age"
+  | "job_title"
+  | "company"
+  | "education"
+  | "zodiac"
+  | "height"
+  | "comu_style"
+  | "love_style"
+  | "drinking"
+  | "smoking"
+  | "workout"
+  | "pets"
+  | "interests"
+  | "gender"
+  | "lat"
+  | "lng"
 >;
 
 function isUuid(value: string) {
@@ -51,7 +77,7 @@ export async function fetchProfilesForIdentityIds(
   for (const identityId of uniqueIds) {
     const { data: byUserId, error: userIdError } = await supabase
       .from("profile")
-      .select("id,user_id,f_name,email,profile_pic")
+      .select("id,user_id,f_name,email,profile_pic,picture2,picture3,bio,relationship_goals,city,area,age,job_title,company,education,zodiac,height,comu_style,love_style,drinking,smoking,workout,pets,interests,gender,lat,lng")
       .eq("user_id", identityId)
       .maybeSingle();
 
@@ -67,7 +93,7 @@ export async function fetchProfilesForIdentityIds(
 
     const { data: byId, error: idError } = await supabase
       .from("profile")
-      .select("id,user_id,f_name,email,profile_pic")
+      .select("id,user_id,f_name,email,profile_pic,picture2,picture3,bio,relationship_goals,city,area,age,job_title,company,education,zodiac,height,comu_style,love_style,drinking,smoking,workout,pets,interests,gender,lat,lng")
       .eq("id", identityId)
       .maybeSingle();
 
