@@ -4,7 +4,38 @@ import type { Database } from "@/types/database";
 export const CURRENT_PROFILE_SELECT =
   "id,user_id,f_name,email,gender,interests,profile_pic,picture2,picture3,city,area,dob,age,bio,relationship_goals,pets,drinking,smoking,workout,job_title,company,zodiac,height,education,comu_style,love_style,lat,lng,created_at";
 
-export type CurrentProfileRow = Database["public"]["Tables"]["profile"]["Row"];
+export type CurrentProfileRow = Pick<
+  Database["public"]["Tables"]["profile"]["Row"],
+  | "id"
+  | "user_id"
+  | "f_name"
+  | "email"
+  | "gender"
+  | "interests"
+  | "profile_pic"
+  | "picture2"
+  | "picture3"
+  | "city"
+  | "area"
+  | "dob"
+  | "age"
+  | "bio"
+  | "relationship_goals"
+  | "pets"
+  | "drinking"
+  | "smoking"
+  | "workout"
+  | "job_title"
+  | "company"
+  | "zodiac"
+  | "height"
+  | "education"
+  | "comu_style"
+  | "love_style"
+  | "lat"
+  | "lng"
+  | "created_at"
+>;
 
 export type CurrentProfileLookupDebug = {
   byEmailFound: boolean;
