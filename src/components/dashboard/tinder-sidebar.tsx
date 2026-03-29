@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Home, LogOut, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { formatUtcDateTime } from "@/lib/date-format";
 
 export interface SidebarConversationPreview {
   userId: string;
@@ -28,23 +29,7 @@ interface TinderSidebarProps {
 }
 
 function formatLatestAt(latestAt: string) {
-  const date = new Date(latestAt);
-  const now = new Date();
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-
-  if (date.toDateString() === now.toDateString()) {
-    return date.toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
-  if (date.toDateString() === yesterday.toDateString()) {
-    return "Yesterday";
-  }
-
-  return date.toLocaleDateString("en-GB");
+  return formatUtcDateTime(latestAt);
 }
 
 function SidebarAvatar({

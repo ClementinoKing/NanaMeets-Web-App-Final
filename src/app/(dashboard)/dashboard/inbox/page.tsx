@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageComposer } from "@/components/dashboard/message-composer";
 import { fetchMessagesForIdentityIds, fetchProfilesForIdentityIds } from "@/lib/message-feed";
+import { formatUtcDateTime } from "@/lib/date-format";
 import { getServerAuthSession } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -13,15 +14,6 @@ interface InboxPageProps {
   searchParams?: Promise<{
     conversation?: string;
   }>;
-}
-
-function formatMessageTime(value: string) {
-  return new Date(value).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function ConversationAvatar({
@@ -131,7 +123,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate font-semibold text-slate-950">{conversation.name}</p>
-                      <time className="shrink-0 text-xs text-slate-500">{formatMessageTime(conversation.latestAt)}</time>
+                      <time className="shrink-0 text-xs text-slate-500">{formatUtcDateTime(conversation.latestAt)}</time>
                     </div>
                     <p className="truncate text-sm text-slate-500">{conversation.email ?? "No email provided"}</p>
                     <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">
@@ -189,7 +181,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                         >
                           <p className="whitespace-pre-wrap text-sm leading-6">{message.message ?? "No message text yet."}</p>
                           <p className={`mt-2 text-xs ${sentByMe ? "text-white/70" : "text-slate-500"}`}>
-                            {formatMessageTime(message.created_at)}
+                            {formatUtcDateTime(message.created_at)}
                           </p>
                         </div>
                       </div>

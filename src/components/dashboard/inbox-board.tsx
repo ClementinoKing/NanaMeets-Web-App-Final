@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatUtcDateTime } from "@/lib/date-format";
 
 export interface Conversation {
   userId: string;
@@ -59,7 +60,7 @@ export function InboxBoard({ conversations }: InboxBoardProps) {
             </div>
 
             <div className="text-right text-xs text-slate-500">
-              {new Date(conversation.latestAt).toLocaleDateString()}
+              {formatUtcDateTime(conversation.latestAt)}
             </div>
           </CardContent>
         </Card>
