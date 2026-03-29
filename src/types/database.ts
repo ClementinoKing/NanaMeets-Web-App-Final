@@ -45,6 +45,9 @@ export interface Database {
           delete: boolean | null;
           delete_me: string | null;
           email: string | null;
+          phone: string | null;
+          fcm_token: string | null;
+          role: number | null;
           created_at: string;
         };
         Insert: {
@@ -90,6 +93,9 @@ export interface Database {
           delete?: boolean | null;
           delete_me?: string | null;
           email?: string | null;
+          phone?: string | null;
+          fcm_token?: string | null;
+          role?: number | null;
           created_at?: string;
         };
         Update: {
@@ -135,6 +141,9 @@ export interface Database {
           delete?: boolean | null;
           delete_me?: string | null;
           email?: string | null;
+          phone?: string | null;
+          fcm_token?: string | null;
+          role?: number | null;
           created_at?: string;
         };
         Relationships: [];

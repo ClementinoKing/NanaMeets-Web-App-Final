@@ -292,7 +292,7 @@ export function OnboardingWizard({ userId, email }: OnboardingWizardProps) {
     gender: "Pick the option that best describes you.",
     dob: "We only show your age, not your birthday.",
     lookingFor: "Choose the vibe you want to bring into NanaMeets.",
-    photos: "You can replace your photos later in Settings.",
+    photos: "You can replace your photos later in Profile.",
     location: "Capture your current location so nearby matches can be tuned more accurately.",
   }[STEPS[currentStep]];
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { TinderSidebar, type SidebarConversationPreview } from "@/components/dashboard/tinder-sidebar";
+import { loadCurrentProfile } from "@/lib/current-profile";
 import { fetchMessagesForIdentityIds, fetchProfilesForIdentityIds } from "@/lib/message-feed";
 import { getServerAuthSession } from "@/lib/supabase/server";
 
@@ -13,11 +14,10 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
     redirect("/login");
   }
 
-  const { data: profile } = await supabase
-    .from("profile")
-    .select("f_name,email,age,city,area,bio,gender,relationship_goals,interests,job_title,profile_pic,id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const { profile } = await loadCurrentProfile(supabase, {
+    email: user.email ?? null,
+    userId: user.id,
+  });
 
   if (!profile) {
     redirect("/create-profile");
@@ -83,17 +83,17 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
 
   return (
     <div className="min-h-screen bg-white p-0 md:bg-[#f5f6f8] md:p-4 dark:bg-black">
-      <div className="min-h-screen md:grid md:grid-cols-[360px_1fr] md:gap-4">
-        <aside className="border-b border-white/10 bg-[#111111] text-white md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:rounded-[2rem] md:border md:border-white/8 md:border-b md:shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
-        <TinderSidebar
-          age={profile?.age ?? null}
-          conversations={conversations}
-          displayName={displayName}
-          location={location}
-          membershipLabel="Monthly Subscription"
-          profileCompletion={profileCompletion * 10}
-          profilePic={profile?.profile_pic ?? null}
-        />
+      <div className="min-h-screen md:grid md:grid-cols-[340px_1fr] md:gap-4">
+        <aside className="border-b border-white/10 bg-[#070707] text-white md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:rounded-[2rem] md:border md:border-white/10 md:border-b md:shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
+          <TinderSidebar
+            age={profile?.age ?? null}
+            conversations={conversations}
+            displayName={displayName}
+            location={location}
+            membershipLabel="Monthly Subscription"
+            profileCompletion={profileCompletion * 10}
+            profilePic={profile?.profile_pic ?? null}
+          />
         </aside>
 
         <main className="min-h-screen bg-white px-4 py-6 md:rounded-[2rem] md:bg-[#f7f8fa] md:px-6 md:py-6 lg:px-8 lg:py-8 dark:bg-black">

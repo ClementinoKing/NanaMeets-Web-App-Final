@@ -6,7 +6,7 @@ export function DashboardLinks() {
       <NavLink href="/dashboard" label="Overview" />
       <NavLink href="/dashboard/discover" label="Discover" />
       <NavLink href="/dashboard/inbox" label="Inbox" />
-      <NavLink href="/dashboard/settings" label="Settings" />
+      <NavLink href="/dashboard/profile" label="Profile" />
     </nav>
   );
 }

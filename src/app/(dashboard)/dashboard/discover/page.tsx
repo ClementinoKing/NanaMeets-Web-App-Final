@@ -41,7 +41,7 @@ export default async function DiscoverPage() {
           <div className="rounded-3xl bg-slate-950 p-5 text-white">
             <p className="text-sm uppercase tracking-[0.24em] text-white/60">Your identity</p>
             <p className="mt-2 text-xl font-semibold">{profile?.f_name ?? user.email}</p>
-            <p className="mt-2 text-sm text-white/70">{profile?.bio ?? "Set up your bio in Settings."}</p>
+            <p className="mt-2 text-sm text-white/70">{profile?.bio ?? "Set up your bio in Profile."}</p>
             <p className="mt-4 text-sm text-white/70">{[profile?.city, profile?.area].filter(Boolean).join(" · ") || "Add a city or area to make the profile feel local."}</p>
           </div>
 
@@ -55,7 +55,7 @@ export default async function DiscoverPage() {
                   </span>
                 ))
               ) : (
-                <p className="text-sm text-slate-500">Add interests in Settings to personalize your profile.</p>
+                <p className="text-sm text-slate-500">Add interests in Profile to personalize your profile.</p>
               )}
             </div>
           </div>
