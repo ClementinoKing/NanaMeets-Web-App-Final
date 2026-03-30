@@ -163,7 +163,7 @@ export default async function DashboardPage() {
           hasLocation={profile?.lat !== null && profile?.lng !== null}
         />
 
-        <SwipeDeck profiles={profiles} />
+        <SwipeDeck currentUserId={user.id} profiles={profiles} />
       </div>
     </section>
   );

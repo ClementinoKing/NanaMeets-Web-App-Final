@@ -251,6 +251,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
     null;
   const selectedMessages = selectedConversation?.messages ?? [];
   const replyRecipientLookup = selectedConversation?.email ?? selectedConversation?.userId ?? "";
+  const selectedConversationKey = selectedConversation?.userId ?? replyRecipientLookup;
   const onlineUserIds = selectedConversation?.userId
     ? await fetchOnlineUserIds(supabase, [selectedConversation.userId])
     : new Set<string>();
@@ -275,10 +276,10 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#050505] shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
               {selectedConversation ? (
                 <div className="flex min-h-0 flex-1 flex-col">
-                  <MessageList currentUserId={user.id} messages={selectedMessages} />
+                  <MessageList conversationKey={selectedConversationKey} currentUserId={user.id} messages={selectedMessages} />
 
                   <div className="shrink-0 border-t border-white/10 bg-[#101010] px-3 py-3 backdrop-blur-xl">
-                    <ChatInput recipientLookup={replyRecipientLookup} placeholder="Type a message..." />
+                    <ChatInput conversationKey={selectedConversationKey} recipientLookup={replyRecipientLookup} placeholder="Type a message..." />
                   </div>
                 </div>
               ) : (

@@ -16,10 +16,26 @@ import { EmojiPicker } from "@/components/dashboard/chat/emoji-picker";
 
 interface ChatInputProps {
   recipientLookup: string;
+  conversationKey: string;
   placeholder?: string;
 }
 
-export function ChatInput({ recipientLookup, placeholder = "Type a message..." }: ChatInputProps) {
+type OptimisticMessageEventDetail = {
+  conversationKey: string;
+  tempId: string;
+  message: {
+    id: string;
+    sender_id: string;
+    receiver_id: string;
+    message: string | null;
+    created_at: string;
+  };
+};
+
+const OPTIMISTIC_MESSAGE_EVENT = "nanameets-chat-optimistic-message";
+const REMOVE_OPTIMISTIC_MESSAGE_EVENT = "nanameets-chat-remove-optimistic-message";
+
+export function ChatInput({ recipientLookup, conversationKey, placeholder = "Type a message..." }: ChatInputProps) {
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
   const [formError, setFormError] = useState<string | null>(null);
@@ -44,6 +60,7 @@ export function ChatInput({ recipientLookup, placeholder = "Type a message..." }
     setFormError(null);
 
     const user = await getCurrentUserSafely(supabase);
+    const tempId = `temp-${crypto.randomUUID()}`;
 
     if (!user) {
       const message = "You must be signed in to send a message.";
@@ -53,6 +70,24 @@ export function ChatInput({ recipientLookup, placeholder = "Type a message..." }
     }
 
     try {
+      const optimisticMessage = {
+        id: tempId,
+        sender_id: user.id,
+        receiver_id: conversationKey,
+        message: values.message,
+        created_at: new Date().toISOString(),
+      };
+
+      window.dispatchEvent(
+        new CustomEvent<OptimisticMessageEventDetail>(OPTIMISTIC_MESSAGE_EVENT, {
+          detail: {
+            conversationKey,
+            tempId,
+            message: optimisticMessage,
+          },
+        }),
+      );
+
       await sendMessage({
         supabase,
         senderId: user.id,
@@ -60,13 +95,21 @@ export function ChatInput({ recipientLookup, placeholder = "Type a message..." }
         message: values.message,
       });
 
-      toast.success("Message sent");
       form.reset({
         recipientLookup,
         message: "",
       });
       router.refresh();
     } catch (error) {
+      window.dispatchEvent(
+        new CustomEvent(REMOVE_OPTIMISTIC_MESSAGE_EVENT, {
+          detail: {
+            conversationKey,
+            tempId,
+          },
+        }),
+      );
+
       const message = error instanceof Error ? error.message : "Could not send your message.";
       setFormError(message);
       toast.error(message);
