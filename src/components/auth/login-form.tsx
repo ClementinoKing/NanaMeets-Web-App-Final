@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff, Loader2, LockKeyhole } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -12,12 +13,12 @@ import { loginSchema, type LoginValues } from "@/lib/validators/auth";
 
 interface LoginFormProps {
   registered?: boolean;
+  oauthError?: boolean;
 }
 
-export function LoginForm({ registered }: LoginFormProps) {
+export function LoginForm({ registered, oauthError }: LoginFormProps) {
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
-  const [formError, setFormError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const form = useForm<LoginValues>({
@@ -28,6 +29,12 @@ export function LoginForm({ registered }: LoginFormProps) {
     },
   });
 
+  useEffect(() => {
+    if (oauthError) {
+      toast.error("We could not complete Google sign-in. Please try again.");
+    }
+  }, [oauthError]);
+
   if (!supabase) {
     return (
       <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -37,15 +44,13 @@ export function LoginForm({ registered }: LoginFormProps) {
   }
 
   const onSubmit = async (values: LoginValues) => {
-    setFormError(null);
-
     const { error } = await supabase.auth.signInWithPassword({
       email: values.email,
       password: values.password,
     });
 
     if (error) {
-      setFormError("We could not sign you in. Check your email and password.");
+      toast.error("We could not sign you in. Check your email and password.");
       return;
     }
 
@@ -58,7 +63,6 @@ export function LoginForm({ registered }: LoginFormProps) {
       return;
     }
 
-    setFormError(null);
     setIsGoogleLoading(true);
 
     const { error } = await supabase.auth.signInWithOAuth({
@@ -69,7 +73,7 @@ export function LoginForm({ registered }: LoginFormProps) {
     });
 
     if (error) {
-      setFormError("We could not start Google sign-in right now.");
+      toast.error("We could not start Google sign-in right now.");
       setIsGoogleLoading(false);
     }
   };
@@ -122,8 +126,6 @@ export function LoginForm({ registered }: LoginFormProps) {
           Forgot Password?
         </button>
       </div>
-
-      {formError ? <p className="text-sm text-[#c2410c]">{formError}</p> : null}
 
       <Button
         className="h-12 w-full rounded-2xl border-0 bg-[linear-gradient(135deg,_#e84056,_#f38aa0)] text-base font-semibold text-white shadow-[0_16px_36px_-18px_rgba(232,64,86,0.95)] transition hover:translate-y-[-1px] hover:opacity-95"

@@ -13,6 +13,7 @@ create table if not exists public.user_sessions (
 
 create unique index if not exists user_sessions_session_id_key on public.user_sessions using btree (session_id) tablespace pg_default;
 create index if not exists user_sessions_user_id_idx on public.user_sessions using btree (user_id) tablespace pg_default;
+create index if not exists user_sessions_updated_at_idx on public.user_sessions using btree (updated_at) tablespace pg_default;
 
 alter table public.user_sessions enable row level security;
 

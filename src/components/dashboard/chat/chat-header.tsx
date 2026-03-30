@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { MoreHorizontal, X } from "lucide-react";
+import { Ban, Flag, MoreHorizontal, X } from "lucide-react";
 
 interface ChatHeaderProps {
   name: string;
@@ -16,6 +17,34 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ name, avatarUrl, online, typingLabel, className }: ChatHeaderProps) {
   const router = useRouter();
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!moreMenuRef.current) {
+        return;
+      }
+
+      if (!moreMenuRef.current.contains(event.target as Node)) {
+        setShowMoreOptions(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowMoreOptions(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   return (
     <header
@@ -46,23 +75,64 @@ export function ChatHeader({ name, avatarUrl, online, typingLabel, className }: 
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div ref={moreMenuRef} className="relative flex items-center gap-2">
           <Button
             aria-label="More options"
             className="h-10 w-10 rounded-full border border-border/70 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
             size="icon"
             variant="ghost"
             type="button"
+            onClick={() => setShowMoreOptions((value) => !value)}
           >
             <MoreHorizontal className="h-5 w-5" />
           </Button>
+
+          {showMoreOptions ? (
+            <div className="absolute right-0 top-[calc(100%+0.75rem)] z-30 w-[16rem] overflow-hidden rounded-[1.25rem] border border-border/70 bg-[#141414] shadow-[0_24px_70px_rgba(0,0,0,0.45)]">
+              <div className="border-b border-border/70 px-4 py-3">
+                <p className="text-sm font-semibold text-foreground">More Options</p>
+              </div>
+
+              <div className="p-2">
+                <Button
+                  className="flex h-12 w-full items-center justify-start gap-3 rounded-[0.9rem] px-4 text-left text-foreground hover:bg-white/5"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowMoreOptions(false)}
+                >
+                  <Flag className="h-4 w-4" />
+                  <span className="text-[0.95rem] font-medium">Report {name}</span>
+                </Button>
+
+                <Button
+                  className="mt-1 flex h-12 w-full items-center justify-start gap-3 rounded-[0.9rem] px-4 text-left text-[#ff5f7d] hover:bg-[#ff5f7d]/10 hover:text-[#ff5f7d]"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowMoreOptions(false)}
+                >
+                  <Ban className="h-4 w-4" />
+                  <span className="text-[0.95rem] font-medium">Block {name}</span>
+                </Button>
+
+                <Button
+                  className="mt-2 flex h-11 w-full items-center justify-center rounded-[0.9rem] border border-border/70 bg-white/5 text-[0.95rem] font-medium text-foreground hover:bg-white/10"
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowMoreOptions(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
           <Button
             aria-label="Close conversation"
             className="h-10 w-10 rounded-full border border-border/70 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
             size="icon"
             variant="ghost"
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.replace("/dashboard")}
           >
             <X className="h-5 w-5" />
           </Button>

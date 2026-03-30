@@ -1,10 +1,23 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageComposer } from "@/components/dashboard/message-composer";
 import { getServerAuthSession } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+const exploreCards = [
+  {
+    title: "Hangout Hubs",
+    description: "Join casual meetups, shared spaces, and community moments.",
+    imageSrc: "/images/disco-ball.png",
+    imageAlt: "Disco ball for Hangout Hubs",
+  },
+  {
+    title: "Event Links",
+    description: "Discover events, socials, and places to connect in real life.",
+    imageSrc: "/images/red-carpet.png",
+    imageAlt: "Red carpet for Event Links",
+  },
+] as const;
 
 export default async function DiscoverPage() {
   const { supabase, user } = await getServerAuthSession();
@@ -13,94 +26,41 @@ export default async function DiscoverPage() {
     redirect("/login");
   }
 
-  const [{ data: profile }, { data: people }] = await Promise.all([
-    supabase
-      .from("profile")
-      .select("f_name,email,city,area,bio,interests,profile_pic")
-      .eq("user_id", user.id)
-      .maybeSingle(),
-    supabase
-      .from("profile")
-      .select("user_id,f_name,email,city,area,bio,interests,profile_pic")
-      .neq("user_id", user.id)
-      .limit(8),
-  ]);
-
-  const interests = profile?.interests ?? [];
-
   return (
-    <section className="grid gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Discover</CardTitle>
-          <CardDescription>
-            Browse profiles from the shared NanaMeets database and start a conversation.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="rounded-3xl bg-slate-950 p-5 text-white">
-            <p className="text-sm uppercase tracking-[0.24em] text-white/60">Your identity</p>
-            <p className="mt-2 text-xl font-semibold">{profile?.f_name ?? user.email}</p>
-            <p className="mt-2 text-sm text-white/70">{profile?.bio ?? "Set up your bio in Profile."}</p>
-            <p className="mt-4 text-sm text-white/70">{[profile?.city, profile?.area].filter(Boolean).join(" · ") || "Add a city or area to make the profile feel local."}</p>
-          </div>
+    <section className="min-h-[calc(100vh-2rem)] bg-[#0c0c0c] px-4 py-6 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-8">
+        <header className="pt-2">
+          <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">Let&apos;s Explore</h1>
+          <p className="mt-3 max-w-2xl text-lg leading-8 text-white/65 sm:text-xl">
+            Match with people through Hangout Hubs, Event Links, and shared relationship goals.
+          </p>
+        </header>
 
-          <div>
-            <p className="text-sm font-medium text-slate-700">Your interests</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {interests.length ? (
-                interests.map((interest) => (
-                  <span key={interest} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600">
-                    {interest}
-                  </span>
-                ))
-              ) : (
-                <p className="text-sm text-slate-500">Add interests in Profile to personalize your profile.</p>
-              )}
-            </div>
-          </div>
+        <div className="grid gap-6">
+          {exploreCards.map((card) => (
+            <article
+              key={card.title}
+              className="flex min-h-[280px] flex-col items-center justify-center rounded-[2rem] border-2 border-[#e44d69] bg-[#23161a] px-8 py-10 text-center shadow-[0_18px_45px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:-translate-y-0.5 hover:border-[#ff5f7d]"
+            >
+              <div className="relative h-28 w-28 sm:h-32 sm:w-32">
+                <Image
+                  alt={card.imageAlt}
+                  className="object-contain"
+                  fill
+                  priority
+                  sizes="(max-width: 640px) 112px, 128px"
+                  src={card.imageSrc}
+                />
+              </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {(people ?? []).map((person) => (
-              <Card key={person.user_id} className="bg-white/90">
-                <CardContent className="space-y-3 px-5 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
-                      {person.profile_pic ? (
-                        <Image
-                          alt={person.f_name ?? "Profile"}
-                          className="object-cover"
-                          fill
-                          loading="lazy"
-                          sizes="44px"
-                          src={person.profile_pic}
-                        />
-                      ) : (
-                        (person.f_name ?? "NM").slice(0, 2).toUpperCase()
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-950">{person.f_name ?? "NanaMeets member"}</p>
-                      <p className="text-xs text-slate-500">{[person.city, person.area].filter(Boolean).join(" · ") || "Location not set"}</p>
-                    </div>
-                  </div>
-                  <p className="line-clamp-3 text-sm leading-6 text-slate-600">{person.bio ?? "No bio yet."}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Start a message</CardTitle>
-          <CardDescription>Send a direct message using a recipient email or user ID.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <MessageComposer />
-        </CardContent>
-      </Card>
+              <h2 className="mt-6 text-2xl font-semibold tracking-tight text-white sm:text-[2rem]">
+                {card.title}
+              </h2>
+              <p className="mt-3 max-w-md text-base leading-7 text-white/65 sm:text-lg">{card.description}</p>
+            </article>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }

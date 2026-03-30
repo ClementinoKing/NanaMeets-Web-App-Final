@@ -184,6 +184,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      swipes: {
+        Row: {
+          id: number;
+          created_at: string;
+          swiper_id: string | null;
+          swiped_id: string | null;
+          is_liked: boolean | null;
+          conversation: boolean | null;
+          boost: boolean | null;
+          direct_message: boolean | null;
+        };
+        Insert: {
+          id?: number;
+          created_at?: string;
+          swiper_id?: string | null;
+          swiped_id?: string | null;
+          is_liked?: boolean | null;
+          conversation?: boolean | null;
+          boost?: boolean | null;
+          direct_message?: boolean | null;
+        };
+        Update: {
+          id?: number;
+          created_at?: string;
+          swiper_id?: string | null;
+          swiped_id?: string | null;
+          is_liked?: boolean | null;
+          conversation?: boolean | null;
+          boost?: boolean | null;
+          direct_message?: boolean | null;
+        };
+        Relationships: [];
+      };
       user_sessions: {
         Row: {
           id: number;
@@ -218,7 +251,23 @@ export interface Database {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      matched_users_profiles: {
+        Row: {
+          match_id: number;
+          f_names: Array<string | null> | null;
+          profile_pics: Array<string | null> | null;
+          user_ids: string[] | null;
+          ages: Array<number | null> | null;
+          cities: Array<string | null> | null;
+          areas: Array<string | null> | null;
+          conversation: boolean | null;
+          blocked: boolean | null;
+          created_at: string | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: Record<string, never>;
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

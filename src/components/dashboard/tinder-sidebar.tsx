@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Heart,
@@ -27,6 +27,17 @@ export interface SidebarConversationPreview {
   sentByMe: boolean;
 }
 
+export interface SidebarMatchPreview {
+  userId: string;
+  name: string;
+  profilePic: string | null;
+  age: number | null;
+  city: string | null;
+  area: string | null;
+  conversation: boolean | null;
+  createdAt: string;
+}
+
 interface TinderSidebarProps {
   displayName: string;
   age: number | null;
@@ -35,6 +46,7 @@ interface TinderSidebarProps {
   profileCompletion: number;
   location: string;
   conversations: SidebarConversationPreview[];
+  matches: SidebarMatchPreview[];
 }
 
 function formatLatestAt(latestAt: string) {
@@ -71,6 +83,29 @@ function SidebarBadge({ children }: { children: ReactNode }) {
   );
 }
 
+const READ_CONVERSATIONS_STORAGE_KEY = "nanameets_read_conversations";
+
+function readConversationMap() {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  try {
+    const raw = window.localStorage.getItem(READ_CONVERSATIONS_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeConversationMap(nextMap: Record<string, string>) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.localStorage.setItem(READ_CONVERSATIONS_STORAGE_KEY, JSON.stringify(nextMap));
+}
+
 export function TinderSidebar({
   displayName,
   age,
@@ -79,6 +114,7 @@ export function TinderSidebar({
   profileCompletion,
   location,
   conversations,
+  matches,
 }: TinderSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -87,15 +123,30 @@ export function TinderSidebar({
   const [signingOut, setSigningOut] = useState(false);
   const [activeTab, setActiveTab] = useState<"messages" | "matches">("messages");
   const [searchTerm, setSearchTerm] = useState("");
+  const [readConversationMapState, setReadConversationMapState] = useState<Record<string, string>>({});
 
   const homeActive = pathname === "/dashboard";
   const exploreActive = pathname.startsWith("/dashboard/discover");
+  const likesActive = pathname.startsWith("/dashboard/likes");
   const selectedConversationId = pathname === "/dashboard/inbox" ? searchParams.get("conversation") : null;
   const completion = Math.max(0, Math.min(100, Math.round(profileCompletion)));
   const unreadCount = useMemo(() => {
-    const count = conversations.filter((conversation) => !conversation.sentByMe).length;
+    const count = conversations.filter(
+      (conversation) => {
+        if (conversation.userId === selectedConversationId || conversation.sentByMe) {
+          return false;
+        }
+
+        const openedAt = readConversationMapState[conversation.userId];
+        if (!openedAt) {
+          return true;
+        }
+
+        return new Date(conversation.latestAt).getTime() > new Date(openedAt).getTime();
+      }
+    ).length;
     return Math.min(99, count);
-  }, [conversations]);
+  }, [conversations, readConversationMapState, selectedConversationId]);
   const filteredConversations = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
@@ -128,6 +179,24 @@ export function TinderSidebar({
     router.refresh();
     setSigningOut(false);
   };
+
+  useEffect(() => {
+    setReadConversationMapState(readConversationMap());
+  }, []);
+
+  useEffect(() => {
+    if (!selectedConversationId || pathname !== "/dashboard/inbox") {
+      return;
+    }
+
+    const nextMap = {
+      ...readConversationMap(),
+      [selectedConversationId]: new Date().toISOString(),
+    };
+
+    writeConversationMap(nextMap);
+    setReadConversationMapState(nextMap);
+  }, [pathname, selectedConversationId]);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_30%),linear-gradient(180deg,#070707_0%,#050505_100%)] text-white">
@@ -192,8 +261,11 @@ export function TinderSidebar({
           <section className="grid grid-cols-[1fr_1fr_1.35fr] gap-2.5">
             <Link
               aria-label="Likes"
-              className="flex h-11 items-center justify-center rounded-[0.9rem] border border-[#7c132d]/80 bg-black/25 text-[#ff7994] transition hover:-translate-y-0.5 hover:border-[#ff7994]/70 hover:bg-[#ff7994]/[0.08]"
-              href="/dashboard/discover"
+              className={cn(
+                "flex h-11 items-center justify-center rounded-[0.9rem] border border-[#7c132d]/80 bg-black/25 text-[#ff7994] transition hover:-translate-y-0.5 hover:border-[#ff7994]/70 hover:bg-[#ff7994]/[0.08]",
+                likesActive ? "border-[#ff7994]/70 bg-[#ff7994]/[0.08]" : ""
+              )}
+              href="/dashboard/likes"
             >
               <Heart className="h-4.5 w-4.5 fill-current stroke-[1.6]" />
             </Link>
@@ -239,13 +311,16 @@ export function TinderSidebar({
 
               <button
                 className={cn(
-                  "-mb-px pb-3 font-heading text-[1.2rem] font-semibold tracking-tight transition-colors",
-                  activeTab === "matches" ? "text-white" : "text-white/52 hover:text-white/75"
+                  "relative -mb-px pb-3 font-heading text-[1.2rem] font-semibold tracking-tight transition-colors",
+                  activeTab === "matches" ? "text-[#ff5f7d]" : "text-white/52 hover:text-white/75"
                 )}
                 onClick={() => setActiveTab("matches")}
                 type="button"
               >
                 Matches
+                {activeTab === "matches" ? (
+                  <span className="absolute inset-x-0 -bottom-[1px] h-0.5 rounded-full bg-[#ff5f7d]" />
+                ) : null}
               </button>
             </div>
 
@@ -277,7 +352,12 @@ export function TinderSidebar({
                         <div className="flex items-start gap-2.5 px-2 py-2.5">
                           <div className="relative mt-0.5">
                             <SidebarAvatar className="h-12 w-12" name={conversation.name} src={conversation.profilePic} />
-                            {!conversation.sentByMe ? (
+                            {!conversation.sentByMe &&
+                            conversation.userId !== selectedConversationId &&
+                            (() => {
+                              const openedAt = readConversationMapState[conversation.userId];
+                              return !openedAt || new Date(conversation.latestAt).getTime() > new Date(openedAt).getTime();
+                            })() ? (
                               <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-[#060606] bg-[#ff5f7d]" />
                             ) : null}
                           </div>
@@ -309,8 +389,37 @@ export function TinderSidebar({
                 </div>
               </div>
             ) : (
-              <div className="mt-4 rounded-[1rem] border border-white/10 bg-white/[0.05] px-3.5 py-3 text-sm text-white/[0.6]">
-                Matches will appear here next. For now, the message feed stays front and center.
+              <div className="mt-4">
+                {matches.length ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {matches.map((match) => (
+                      <Link
+                        key={match.userId}
+                        className="group relative aspect-[0.9/1] overflow-hidden rounded-[1rem] border border-white/10 bg-[#141414] shadow-[0_14px_40px_rgba(0,0,0,0.35)] transition duration-200 hover:-translate-y-0.5 hover:border-white/20"
+                        href={`/dashboard/inbox?conversation=${match.userId}`}
+                      >
+                        <div className="absolute inset-0">
+                          <SidebarAvatar className="h-full w-full rounded-none" name={match.name} src={match.profilePic} />
+                        </div>
+
+                        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.06)_0%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.88)_100%)]" />
+
+                        <div className="absolute inset-x-0 bottom-0 p-3">
+                          <p className="truncate font-heading text-[1.2rem] font-semibold leading-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
+                            {match.name}
+                          </p>
+                          <p className="mt-1 truncate text-[0.82rem] leading-5 text-white/75 drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
+                            {[match.city, match.area].filter(Boolean).join(" · ") || "Location not set"}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-[1rem] border border-white/10 bg-white/[0.05] px-3.5 py-3 text-sm text-white/[0.6]">
+                    No matches yet. Keep swiping and messaging to build your list.
+                  </div>
+                )}
               </div>
             )}
           </section>

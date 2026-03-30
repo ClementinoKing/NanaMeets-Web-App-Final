@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { Paperclip, Send, Smile } from "lucide-react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getCurrentUserSafely } from "@/lib/supabase/browser-auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { messageSchema, type MessageValues } from "@/lib/validators/profile";
 import { sendMessage } from "@/lib/send-message";
+import { EmojiPicker } from "@/components/dashboard/chat/emoji-picker";
 
 interface ChatInputProps {
   recipientLookup: string;
@@ -28,6 +30,7 @@ export function ChatInput({ recipientLookup, placeholder = "Type a message..." }
       message: "",
     },
   });
+  const messageValue = form.watch("message");
 
   if (!supabase) {
     return (
@@ -40,9 +43,7 @@ export function ChatInput({ recipientLookup, placeholder = "Type a message..." }
   const onSubmit = async (values: MessageValues) => {
     setFormError(null);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getCurrentUserSafely(supabase);
 
     if (!user) {
       const message = "You must be signed in to send a message.";
@@ -72,29 +73,17 @@ export function ChatInput({ recipientLookup, placeholder = "Type a message..." }
     }
   };
 
+  const handleEmojiSelect = (emoji: string) => {
+    const currentMessage = form.getValues("message") || "";
+    form.setValue("message", `${currentMessage}${emoji}`, { shouldDirty: true, shouldTouch: true });
+  };
+
   return (
     <form className="flex items-end gap-2.5" onSubmit={form.handleSubmit(onSubmit)}>
       <input type="hidden" {...form.register("recipientLookup")} />
 
       <div className="flex flex-1 items-center gap-1.5 rounded-full border border-border/70 bg-card/80 px-2.5 py-2 shadow-[0_16px_45px_rgba(0,0,0,0.18)] backdrop-blur-xl">
-        <Button
-          aria-label="Add emoji"
-          className="h-10 w-10 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <Smile className="h-4 w-4" />
-        </Button>
-        <Button
-          aria-label="Attach file"
-          className="h-10 w-10 shrink-0 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <Paperclip className="h-4 w-4" />
-        </Button>
+        <EmojiPicker onSelect={handleEmojiSelect} />
         <Input
           className="h-11 flex-1 border-0 bg-transparent px-2 text-[0.98rem] text-foreground placeholder:text-muted-foreground/70 focus-visible:ring-0 focus-visible:ring-offset-0"
           placeholder={placeholder}
@@ -105,7 +94,7 @@ export function ChatInput({ recipientLookup, placeholder = "Type a message..." }
       <Button
         aria-label="Send message"
         className="h-14 w-14 shrink-0 rounded-full bg-primary p-0 text-primary-foreground shadow-[0_18px_40px_rgba(0,0,0,0.18)] hover:bg-primary/90"
-        disabled={form.formState.isSubmitting}
+        disabled={form.formState.isSubmitting || !messageValue?.trim()}
         type="submit"
       >
         <Send className="h-6 w-6" />

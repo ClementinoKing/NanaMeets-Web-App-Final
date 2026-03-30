@@ -36,14 +36,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </p>
       </header>
 
-      {oauthError ? (
-        <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50/85 px-4 py-3 text-sm text-rose-800 shadow-sm">
-          We could not complete Google sign-in. Please try again.
-        </div>
-      ) : null}
-
       <div className="mt-8">
-        <LoginForm registered={registered} />
+        <LoginForm oauthError={oauthError} registered={registered} />
       </div>
 
       <p className="mt-8 text-center text-sm text-slate-600">

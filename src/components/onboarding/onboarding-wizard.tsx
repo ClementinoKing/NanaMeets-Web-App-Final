@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, Loader2, MapPin, Plus, Sparkles } from "lucide-r
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getCurrentUserSafely } from "@/lib/supabase/browser-auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { saveProfileRow } from "@/lib/profile-write";
 import { uploadManyToR2 } from "@/lib/r2";
@@ -225,9 +226,7 @@ export function OnboardingWizard({ userId, email }: OnboardingWizardProps) {
     setIsSubmitting(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getCurrentUserSafely(supabase);
 
       if (!user) {
         throw new Error("User not authenticated");

@@ -3,10 +3,12 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import Lottie from "lottie-react";
 import { formatUtcDateTime } from "@/lib/date-format";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Database } from "@/types/database";
 import { MessageBubble } from "./message-bubble";
+import emptyMessagesAnimation from "../../../../public/json/Messages_Empty.json";
 
 type ChatMessage = Pick<
   Database["public"]["Tables"]["messages"]["Row"],
@@ -74,8 +76,14 @@ export function MessageList({ messages, currentUserId, typingLabel }: MessageLis
             );
           })
         ) : (
-          <div className="flex h-full items-center justify-center py-12 text-sm text-muted-foreground">
-            This conversation has no messages yet.
+          <div className="flex h-full items-center justify-center px-6 py-12">
+            <div className="flex max-w-md flex-col items-center text-center">
+              <div className="flex h-56 w-56 items-center justify-center">
+                <Lottie animationData={emptyMessagesAnimation} autoplay loop={false} />
+              </div>
+              <h2 className="mt-1 text-3xl font-semibold tracking-tight text-white">Break the Ice</h2>
+              <p className="mt-2 text-base leading-7 text-white/70">Start a conversation with Ismailar</p>
+            </div>
           </div>
         )}
 

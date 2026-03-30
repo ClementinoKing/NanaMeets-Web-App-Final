@@ -1,10 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
-type MessageRow = Pick<
+type BaseMessageRow = Pick<
   Database["public"]["Tables"]["messages"]["Row"],
   "id" | "sender_id" | "receiver_id" | "message" | "created_at"
 >;
+
+type MatchedUsersProfileRow = Database["public"]["Views"]["matched_users_profiles"]["Row"];
 
 type ProfileRow = Pick<
   Database["public"]["Tables"]["profile"]["Row"],
@@ -46,7 +48,7 @@ export async function fetchMessagesForIdentityIds(
   identityIds: string[],
 ) {
   const uniqueIds = [...new Set(identityIds.filter(Boolean))];
-  const merged = new Map<number, MessageRow>();
+  const merged = new Map<number, BaseMessageRow>();
 
   for (const identityId of uniqueIds) {
     const { data, error } = await supabase
@@ -65,6 +67,47 @@ export async function fetchMessagesForIdentityIds(
   }
 
   return [...merged.values()].sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime());
+}
+
+export async function fetchMatchedUsersProfilesForIdentityIds(
+  supabase: SupabaseClient<Database>,
+  identityIds: string[],
+) {
+  const uniqueIds = [...new Set(identityIds.filter(Boolean))];
+
+  if (!uniqueIds.length) {
+    return [] as MatchedUsersProfileRow[];
+  }
+
+  const merged = new Map<number, MatchedUsersProfileRow>();
+
+  for (const identityId of uniqueIds) {
+    const { data, error } = await supabase
+      .from("matched_users_profiles")
+      .select("match_id,f_names,profile_pics,user_ids,ages,cities,areas,conversation,blocked,created_at")
+      .contains("user_ids", [identityId])
+      .eq("blocked", false)
+      .eq("conversation", false)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    for (const row of data ?? []) {
+      if (!(row.user_ids ?? []).includes(identityId)) {
+        continue;
+      }
+
+      merged.set(row.match_id, row);
+    }
+  }
+
+  return [...merged.values()].sort((left, right) => {
+    const leftCreated = left.created_at ? new Date(left.created_at).getTime() : 0;
+    const rightCreated = right.created_at ? new Date(right.created_at).getTime() : 0;
+    return rightCreated - leftCreated;
+  });
 }
 
 export async function fetchProfilesForIdentityIds(

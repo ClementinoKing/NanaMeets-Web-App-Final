@@ -173,8 +173,18 @@ export default function HomePage() {
       `}</style>
 
       <header className="relative min-h-screen overflow-hidden snap-start bg-black">
+        <div className="absolute inset-0">
+          <Image
+            src="/images/hero_img.png"
+            alt="Nana Meets hero image"
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="100vw"
+          />
+        </div>
         <div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(233,64,87,0.3),transparent_28%),radial-gradient(circle_at_20%_30%,rgba(239,168,69,0.18),transparent_25%),linear-gradient(180deg,rgba(8,8,8,0.96)_0%,rgba(0,0,0,1)_100%)]"
+          className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(233,64,87,0.3),transparent_28%),radial-gradient(circle_at_20%_30%,rgba(239,168,69,0.18),transparent_25%),linear-gradient(180deg,rgba(8,8,8,0.72)_0%,rgba(0,0,0,0.92)_100%)]"
           aria-hidden="true"
         />
         <div

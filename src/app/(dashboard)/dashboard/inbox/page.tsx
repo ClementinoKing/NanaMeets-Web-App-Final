@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
+import { Briefcase, Building2, GraduationCap, Heart, MapPin, Ruler, UserRoundPen, type LucideIcon } from "lucide-react";
 import { ChatHeader } from "@/components/dashboard/chat/chat-header";
 import { ChatInput } from "@/components/dashboard/chat/chat-input";
 import { MessageList } from "@/components/dashboard/chat/message-list";
@@ -42,14 +43,23 @@ const inboxThemeVars: CSSProperties = {
 function ProfileBlock({
   label,
   value,
+  icon: Icon,
 }: {
   label: string;
   value: string | null | undefined;
+  icon: LucideIcon;
 }) {
+  if (!value?.trim()) {
+    return null;
+  }
+
   return (
     <div className="border-b border-border/70 py-2.5 last:border-b-0">
-      <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
-      <p className="mt-1 text-[0.92rem] leading-6 text-foreground/90">{value || "Not set"}</p>
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Icon className="h-3.5 w-3.5 shrink-0" />
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em]">{label}</p>
+      </div>
+      <p className="mt-1 text-[0.92rem] leading-6 text-foreground/90">{value}</p>
     </div>
   );
 }
@@ -70,6 +80,23 @@ function RightRail({
   const location = [selectedProfile?.city, selectedProfile?.area].filter(Boolean).join(" · ");
   const picture = selectedProfile?.profile_pic ?? selectedConversation?.profilePic ?? null;
   const extraPhotos = [selectedProfile?.picture2, selectedProfile?.picture3].filter(Boolean) as string[];
+  const relationshipGoals = selectedProfile?.relationship_goals?.trim() || null;
+  const bio = selectedProfile?.bio?.trim() || null;
+  const essentials = [
+    { label: "Location", value: location || null, icon: MapPin },
+    { label: "Job title", value: selectedProfile?.job_title?.trim() || null, icon: Briefcase },
+    { label: "Company", value: selectedProfile?.company?.trim() || null, icon: Building2 },
+    { label: "Education", value: selectedProfile?.education?.trim() || null, icon: GraduationCap },
+    { label: "Height", value: selectedProfile?.height ? `${selectedProfile.height} cm` : null, icon: Ruler },
+    {
+      label: "Lifestyle",
+      value:
+        [selectedProfile?.drinking, selectedProfile?.smoking, selectedProfile?.workout, selectedProfile?.pets]
+          .filter((item): item is string => Boolean(item && item.trim()))
+          .join(" · ") || null,
+      icon: Heart,
+    },
+  ].filter((item) => Boolean(item.value));
 
   return (
     <aside className="h-full space-y-3 overflow-y-auto pr-1">
@@ -81,41 +108,45 @@ function RightRail({
           </h2>
         </div>
 
-        <div className="relative aspect-[3/4] min-h-[300px] bg-[#0f0f0f]">
-          {picture ? (
+        {picture ? (
+          <div className="relative aspect-[3/4] min-h-[300px] bg-[#0f0f0f]">
             <Image alt={displayName} className="object-cover" fill sizes="(max-width: 1280px) 100vw, 33vw" src={picture} />
-          ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground">No profile image</div>
-          )}
-        </div>
+          </div>
+        ) : null}
       </div>
 
-      <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-        <p className="text-[0.92rem] font-semibold text-foreground/75">Looking for</p>
-        <div className="mt-3 rounded-[1.1rem] bg-[#101010] px-4 py-4">
-          <p className="text-[0.98rem] font-semibold text-foreground/90">{selectedProfile?.relationship_goals ?? "Not set"}</p>
+      {relationshipGoals ? (
+        <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+          <div className="flex items-center gap-2 text-foreground/75">
+            <UserRoundPen className="h-4 w-4" />
+            <p className="text-[0.92rem] font-semibold">Looking for</p>
+          </div>
+          <div className="mt-3 rounded-[1.1rem] bg-[#101010] px-4 py-4">
+            <p className="text-[0.98rem] font-semibold text-foreground/90">{relationshipGoals}</p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
-      <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-        <p className="text-[0.92rem] font-semibold text-foreground/75">About me</p>
-        <p className="mt-3 text-[0.92rem] leading-6 text-foreground/90">{selectedProfile?.bio ?? "No bio added yet."}</p>
-      </div>
-
-      <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-        <p className="text-[0.92rem] font-semibold text-foreground/75">Essentials</p>
-        <div className="mt-2 divide-y divide-white/10">
-          <ProfileBlock label="Location" value={location || "Location not set"} />
-          <ProfileBlock label="Job title" value={selectedProfile?.job_title} />
-          <ProfileBlock label="Company" value={selectedProfile?.company} />
-          <ProfileBlock label="Education" value={selectedProfile?.education} />
-          <ProfileBlock label="Height" value={selectedProfile?.height ? `${selectedProfile.height} cm` : null} />
-          <ProfileBlock
-            label="Lifestyle"
-            value={[selectedProfile?.drinking, selectedProfile?.smoking, selectedProfile?.workout, selectedProfile?.pets].filter(Boolean).join(" · ") || null}
-          />
+      {bio ? (
+        <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+          <div className="flex items-center gap-2 text-foreground/75">
+            <UserRoundPen className="h-4 w-4" />
+            <p className="text-[0.92rem] font-semibold">About me</p>
+          </div>
+          <p className="mt-3 text-[0.92rem] leading-6 text-foreground/90">{bio}</p>
         </div>
-      </div>
+      ) : null}
+
+      {essentials.length ? (
+        <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
+          <p className="text-[0.92rem] font-semibold text-foreground/75">Essentials</p>
+          <div className="mt-2 divide-y divide-white/10">
+            {essentials.map((item) => (
+              <ProfileBlock key={item.label} icon={item.icon} label={item.label} value={item.value} />
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {extraPhotos.length ? (
         <div className="rounded-[1.35rem] border border-border/70 bg-[#151515] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
@@ -193,9 +224,31 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
     })
     .sort((left, right) => new Date(right.latestAt).getTime() - new Date(left.latestAt).getTime());
 
-  const selectedConversationId = resolvedSearchParams.conversation ?? conversations[0]?.userId ?? null;
+  const requestedConversationId = resolvedSearchParams.conversation ?? null;
+  const requestedProfile =
+    requestedConversationId && !conversations.some((conversation) => conversation.userId === requestedConversationId)
+      ? (await fetchProfilesForIdentityIds(supabase, [requestedConversationId]))[0] ?? null
+      : null;
+  const selectedConversationId = requestedConversationId ?? conversations[0]?.userId ?? null;
   const selectedConversation =
-    conversations.find((conversation) => conversation.userId === selectedConversationId) ?? conversations[0] ?? null;
+    conversations.find((conversation) => conversation.userId === selectedConversationId) ??
+    (requestedConversationId
+      ? requestedProfile
+        ? {
+            userId: requestedConversationId,
+            latestMessage: null,
+            latestAt: requestedProfile.created_at,
+            sentByMe: false,
+            messages: [],
+            name: requestedProfile.f_name ?? requestedConversationId,
+            email: requestedProfile.email ?? null,
+            profilePic: requestedProfile.profile_pic ?? null,
+            profile: requestedProfile,
+          }
+        : null
+      : null) ??
+    conversations[0] ??
+    null;
   const selectedMessages = selectedConversation?.messages ?? [];
   const replyRecipientLookup = selectedConversation?.email ?? selectedConversation?.userId ?? "";
   const onlineUserIds = selectedConversation?.userId

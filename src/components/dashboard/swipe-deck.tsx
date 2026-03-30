@@ -4,6 +4,7 @@ import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import Lottie from "lottie-react";
 import {
   ArrowRight,
   ArrowUp,
@@ -15,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import heartYellowAnimation from "../../../public/json/Heart_yellow.json";
 
 export interface SwipeProfile {
   userId: string;
@@ -29,6 +31,27 @@ export interface SwipeProfile {
 
 interface SwipeDeckProps {
   profiles: SwipeProfile[];
+}
+
+function EmptyDeckState() {
+  return (
+    <div className="mx-auto flex min-h-[76vh] w-full max-w-[560px] flex-col items-center justify-center rounded-[2rem] border border-white/10 bg-[#0c0c0c] px-8 py-10 text-center shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
+      <div className="mt-4 flex h-44 w-44 items-center justify-center">
+        <Lottie animationData={heartYellowAnimation} loop autoplay />
+      </div>
+      <h2 className="mt-1.5 text-[1.9rem] font-semibold tracking-tight text-[#ff4f6b]">All Caught Up!</h2>
+      <p className="mt-2 max-w-md text-[1.05rem] leading-7 text-white/70">
+        Check back later for new profiles, new matches are coming soon. Keep an eye out!
+      </p>
+      <button
+        className="mt-9 inline-flex items-center justify-center rounded-full bg-[#ff4f6b] px-8 py-4 text-[1.05rem] font-semibold text-white shadow-[0_16px_36px_rgba(255,79,107,0.28)] transition hover:bg-[#ff6078]"
+        type="button"
+        onClick={() => window.location.reload()}
+      >
+        Try Again
+      </button>
+    </div>
+  );
 }
 
 function ActionButton({
@@ -197,12 +220,7 @@ export function SwipeDeck({ profiles }: SwipeDeckProps) {
   );
 
   if (!currentProfile) {
-    return (
-      <div className="mx-auto flex min-h-[70vh] w-full max-w-[560px] flex-col items-center justify-center rounded-[2rem] border border-white/10 bg-[#0c0c0c] p-8 text-center shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
-        <p className="text-lg font-semibold text-white">No profiles yet</p>
-        <p className="mt-2 text-sm text-white/60">Use Discover to add people to the swipe deck.</p>
-      </div>
-    );
+    return <EmptyDeckState />;
   }
 
   const location = [currentProfile.city, currentProfile.area].filter(Boolean).join(" · ");

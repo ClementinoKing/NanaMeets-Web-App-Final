@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DashboardLocationSync } from "@/components/dashboard/dashboard-location-sync";
-import { RpcTesterModal } from "@/components/dashboard/rpc-tester-modal";
 import { SwipeDeck, type SwipeProfile } from "@/components/dashboard/swipe-deck";
 import { getServerAuthSession } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
@@ -110,8 +109,12 @@ async function fetchUnswipedUsers(
     const { data, error } = await supabase.rpc(attempt.fnName, attempt.params as never);
     const rows = Array.isArray(data) ? (data as UnswipedUserRow[]) : [];
 
-    if (!error && rows.length > 0) {
-      return rows;
+    if (!error) {
+      if (rows.length > 0) {
+        return rows;
+      }
+
+      return [];
     }
   }
 
@@ -155,24 +158,9 @@ export default async function DashboardPage() {
   return (
     <section className="-mx-4 -my-6 flex min-h-[calc(100vh-3rem)] items-center justify-center bg-white px-4 py-6 text-slate-950 dark:bg-black dark:text-white sm:-mx-6 sm:-my-8 lg:-mx-8 lg:-my-8">
       <div className="w-full">
-        <div className="mx-auto mb-4 flex w-full max-w-[560px] items-center justify-between px-2">
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white/45">
-            Gender filter: {getOppositeGenderFilter(profile?.gender) || "Any"}
-          </span>
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-500 shadow-sm dark:border-white/10 dark:bg-white/5 dark:text-white/45">
-            Source: RPC
-          </span>
-        </div>
-
         <DashboardLocationSync
           userId={user.id}
           hasLocation={profile?.lat !== null && profile?.lng !== null}
-        />
-        <RpcTesterModal
-          currentGender={profile?.gender ?? null}
-          currentLat={profile?.lat ?? null}
-          currentLng={profile?.lng ?? null}
-          userId={user.id}
         />
 
         <SwipeDeck profiles={profiles} />

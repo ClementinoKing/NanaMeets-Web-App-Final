@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { getCurrentUserSafely } from "@/lib/supabase/browser-auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { sendMessage } from "@/lib/send-message";
 import { messageSchema, type MessageValues } from "@/lib/validators/profile";
@@ -41,9 +42,7 @@ export function MessageComposer({ defaultRecipientLookup = "", mode = "compose" 
   const onSubmit = async (values: MessageValues) => {
     setFormError(null);
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const user = await getCurrentUserSafely(supabase);
 
     if (!user) {
       const errorMessage = "You must be signed in to send a message.";

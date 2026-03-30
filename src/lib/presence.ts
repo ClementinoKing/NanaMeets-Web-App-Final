@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 
+const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+
 export async function fetchOnlineUserIds(
   supabase: SupabaseClient<Database>,
   userIds: string[],
@@ -13,10 +15,10 @@ export async function fetchOnlineUserIds(
 
   const { data, error } = await supabase
     .from("user_sessions")
-    .select("user_id,is_online,disconnected_at")
+    .select("user_id,is_online,updated_at")
     .in("user_id", uniqueIds)
     .eq("is_online", true)
-    .is("disconnected_at", null);
+    .gte("updated_at", new Date(Date.now() - ONLINE_WINDOW_MS).toISOString());
 
   if (error) {
     throw error;
