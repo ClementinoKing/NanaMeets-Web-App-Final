@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, LockKeyhole, Mail, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck, Trash2 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Delete Your NanaMeets Account",
@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-static";
 
 const deletionSteps = [
-  "Send a deletion request from the email address tied to your account.",
-  "Include your full name and the phone number or email used on NanaMeets.",
-  "Our team will confirm the request and complete deletion after verification.",
+  "Open the app and choose Delete Account.",
+  "Confirm the deletion action.",
+  "Your account and profile will be deleted.",
 ];
 
 export default function DeleteAccountPage() {
@@ -41,16 +41,15 @@ export default function DeleteAccountPage() {
               </h1>
 
               <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-                This page is public, read-only, and available from anywhere. If you want your
-                NanaMeets account removed, follow the steps below and our support team will handle
-                the request.
+                This page is public, read-only, and available from anywhere. If you delete your
+                NanaMeets account, your account will be deleted.
               </p>
 
               <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <div className="flex items-start gap-3">
-                  <LockKeyhole className="mt-0.5 h-5 w-5 text-teal-700" />
+                  <Trash2 className="mt-0.5 h-5 w-5 text-teal-700" />
                   <div>
-                    <p className="font-semibold text-slate-900">What happens after deletion</p>
+                    <p className="font-semibold text-slate-900">What happens when you delete it</p>
                     <p className="mt-2 text-sm leading-6 text-slate-600">
                       Your profile and account data will be removed, except where retention is
                       required for legal, security, or financial recordkeeping purposes.
@@ -74,13 +73,6 @@ export default function DeleteAccountPage() {
               </div>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href="mailto:support@nanameets.com?subject=Account%20deletion%20request"
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
-                >
-                  <Mail className="h-4 w-4" />
-                  Email support
-                </a>
                 <Link
                   href="/privacy"
                   className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50"
@@ -111,20 +103,6 @@ export default function DeleteAccountPage() {
                     </li>
                   </ul>
                 </div>
-              </div>
-
-              <div className="mt-6 rounded-[1.5rem] border border-[#E94057]/15 bg-[#E94057]/8 p-6">
-                <p className="text-sm font-semibold text-slate-900">Need help?</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  Write to{" "}
-                  <a
-                    href="mailto:support@nanameets.com"
-                    className="font-semibold text-[#B53045] underline decoration-[#E94057]/40 underline-offset-4"
-                  >
-                    support@nanameets.com
-                  </a>{" "}
-                  and our team will guide you through the deletion process.
-                </p>
               </div>
 
               <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-900 p-6 text-white">

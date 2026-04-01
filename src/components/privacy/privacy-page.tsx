@@ -176,12 +176,12 @@ export default function PrivacyPage() {
                     your device settings.
                   </li>
                   <li className="text-base leading-relaxed text-gray-300">
-                    <strong>Account Deletion:</strong> You can request account deletion by contacting our
-                    support team or visiting{" "}
+                    <strong>Account Deletion:</strong> If you delete your account, your account will be
+                    deleted. You can also visit{" "}
                     <Link href="/delete_account" className="text-white underline underline-offset-4">
                       /delete_account
                     </Link>
-                    .
+                    {" "}for the public deletion page.
                   </li>
                   <li className="text-base leading-relaxed text-gray-300">
                     <strong>Marketing Preferences:</strong> You may opt out of promotional emails or
