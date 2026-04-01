@@ -33,6 +33,8 @@ export interface SwipeProfile {
 interface SwipeDeckProps {
   profiles: SwipeProfile[];
   currentUserId: string;
+  canDirectMessageUsers: boolean;
+  onRequestSubscription: () => void;
 }
 
 function EmptyDeckState() {
@@ -118,7 +120,7 @@ async function persistSwipeAction(
   }
 }
 
-export function SwipeDeck({ profiles, currentUserId }: SwipeDeckProps) {
+export function SwipeDeck({ profiles, currentUserId, canDirectMessageUsers, onRequestSubscription }: SwipeDeckProps) {
   const supabase = getSupabaseBrowserClient();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -136,6 +138,9 @@ export function SwipeDeck({ profiles, currentUserId }: SwipeDeckProps) {
   const progressCount = 3;
   const swipeThreshold = 110;
   const swipeRotation = Math.max(-14, Math.min(14, dragOffset.x / 18));
+  const dragProgress = Math.min(1, Math.abs(dragOffset.x) / swipeThreshold);
+  const swipeLabel =
+    dragOffset.x > 12 ? "Like" : dragOffset.x < -12 ? "Nope" : null;
   const cardTransform = swipeOutDirection
     ? `translate3d(${swipeOutDirection === "right" ? "140vw" : "-140vw"}, 0, 0) rotate(${
         swipeOutDirection === "right" ? 16 : -16
@@ -362,7 +367,7 @@ export function SwipeDeck({ profiles, currentUserId }: SwipeDeckProps) {
                       />
                     ))}
                   </div>
-                ) : null}
+                  ) : null}
 
                 <div className="relative h-full w-full overflow-hidden">
                   {profileActiveImage ? (
@@ -372,6 +377,43 @@ export function SwipeDeck({ profiles, currentUserId }: SwipeDeckProps) {
                   )}
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/18 to-transparent" />
+
+                  {isTop ? (
+                    <>
+                      <div
+                        className={cn(
+                          "absolute left-5 top-5 z-20 rounded-full border-4 px-5 py-2 text-[1rem] font-black uppercase tracking-[0.28em] shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-sm transition-transform duration-100",
+                          dragOffset.x > 12
+                            ? "border-[#39d98a] bg-[#39d98a]/20 text-[#39d98a] animate-pulse"
+                            : "border-transparent bg-transparent text-transparent",
+                        )}
+                        style={{
+                          opacity: dragOffset.x > 12 ? Math.min(1, 0.3 + dragProgress) : 0,
+                          transform: dragOffset.x > 12
+                            ? `translate3d(-${Math.min(10, dragProgress * 12)}px, ${Math.min(4, dragProgress * 4)}px, 0) scale(${1 + dragProgress * 0.8}) rotate(-8deg)`
+                            : "scale(0.7)",
+                        }}
+                      >
+                        LIKE
+                      </div>
+                      <div
+                        className={cn(
+                          "absolute right-5 top-5 z-20 rounded-full border-4 px-5 py-2 text-[1rem] font-black uppercase tracking-[0.28em] shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-sm transition-transform duration-100",
+                          dragOffset.x < -12
+                            ? "border-[#ff5c74] bg-[#ff5c74]/20 text-[#ff5c74] animate-pulse"
+                            : "border-transparent bg-transparent text-transparent",
+                        )}
+                        style={{
+                          opacity: dragOffset.x < -12 ? Math.min(1, 0.3 + dragProgress) : 0,
+                          transform: dragOffset.x < -12
+                            ? `translate3d(${Math.min(10, dragProgress * 12)}px, ${Math.min(4, dragProgress * 4)}px, 0) scale(${1 + dragProgress * 0.8}) rotate(8deg)`
+                            : "scale(0.7)",
+                        }}
+                      >
+                        NOPE
+                      </div>
+                    </>
+                  ) : null}
 
                   {isTop ? (
                     <>
@@ -431,9 +473,15 @@ export function SwipeDeck({ profiles, currentUserId }: SwipeDeckProps) {
         <ActionButton className="h-16 w-16 text-[#8fe04c]" onClick={() => triggerSwipeAction("like")}>
           <Heart className="h-8 w-8" />
         </ActionButton>
-        <ActionButton className="text-[#4ea1ff]" href={`/dashboard/inbox?conversation=${currentProfile.userId}`}>
-          <MessageCircleMore className="h-7 w-7" />
-        </ActionButton>
+        {canDirectMessageUsers ? (
+          <ActionButton className="text-[#4ea1ff]" href={`/dashboard/inbox?conversation=${currentProfile.userId}`}>
+            <MessageCircleMore className="h-7 w-7" />
+          </ActionButton>
+        ) : (
+          <ActionButton className="text-[#4ea1ff]" onClick={onRequestSubscription}>
+            <MessageCircleMore className="h-7 w-7" />
+          </ActionButton>
+        )}
       </div>
 
     </div>

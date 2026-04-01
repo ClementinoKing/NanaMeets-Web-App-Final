@@ -16,9 +16,10 @@ import { messageSchema, type MessageValues } from "@/lib/validators/profile";
 interface MessageComposerProps {
   defaultRecipientLookup?: string;
   mode?: "compose" | "reply";
+  canDirectMessage?: boolean;
 }
 
-export function MessageComposer({ defaultRecipientLookup = "", mode = "compose" }: MessageComposerProps) {
+export function MessageComposer({ defaultRecipientLookup = "", mode = "compose", canDirectMessage }: MessageComposerProps) {
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
   const [formError, setFormError] = useState<string | null>(null);
@@ -30,6 +31,7 @@ export function MessageComposer({ defaultRecipientLookup = "", mode = "compose" 
       message: "",
     },
   });
+  const monthlyMessagingAllowed = canDirectMessage ?? true;
 
   if (!supabase) {
     return (
@@ -41,6 +43,13 @@ export function MessageComposer({ defaultRecipientLookup = "", mode = "compose" 
 
   const onSubmit = async (values: MessageValues) => {
     setFormError(null);
+
+    if (!monthlyMessagingAllowed) {
+      const errorMessage = "A monthly subscription is required to send direct messages.";
+      setFormError(errorMessage);
+      toast.error(errorMessage);
+      return;
+    }
 
     const user = await getCurrentUserSafely(supabase);
 

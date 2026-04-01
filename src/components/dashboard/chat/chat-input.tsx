@@ -18,6 +18,7 @@ interface ChatInputProps {
   recipientLookup: string;
   conversationKey: string;
   placeholder?: string;
+  canDirectMessage?: boolean;
 }
 
 type OptimisticMessageEventDetail = {
@@ -35,7 +36,7 @@ type OptimisticMessageEventDetail = {
 const OPTIMISTIC_MESSAGE_EVENT = "nanameets-chat-optimistic-message";
 const REMOVE_OPTIMISTIC_MESSAGE_EVENT = "nanameets-chat-remove-optimistic-message";
 
-export function ChatInput({ recipientLookup, conversationKey, placeholder = "Type a message..." }: ChatInputProps) {
+export function ChatInput({ recipientLookup, conversationKey, placeholder = "Type a message...", canDirectMessage }: ChatInputProps) {
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
   const [formError, setFormError] = useState<string | null>(null);
@@ -47,6 +48,7 @@ export function ChatInput({ recipientLookup, conversationKey, placeholder = "Typ
     },
   });
   const messageValue = form.watch("message");
+  const monthlyMessagingAllowed = canDirectMessage ?? true;
 
   if (!supabase) {
     return (
@@ -58,6 +60,13 @@ export function ChatInput({ recipientLookup, conversationKey, placeholder = "Typ
 
   const onSubmit = async (values: MessageValues) => {
     setFormError(null);
+
+    if (!monthlyMessagingAllowed) {
+      const message = "A monthly subscription is required to send direct messages.";
+      setFormError(message);
+      toast.error(message);
+      return;
+    }
 
     const user = await getCurrentUserSafely(supabase);
     const tempId = `temp-${crypto.randomUUID()}`;

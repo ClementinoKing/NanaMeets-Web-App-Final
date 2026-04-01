@@ -7,7 +7,10 @@ import { ChatInput } from "@/components/dashboard/chat/chat-input";
 import { MessageList } from "@/components/dashboard/chat/message-list";
 import { fetchMessagesForIdentityIds, fetchProfilesForIdentityIds } from "@/lib/message-feed";
 import { fetchOnlineUserIds } from "@/lib/presence";
+import { loadActiveSubscription, canDirectMessageUsers } from "@/lib/subscriptions";
 import { getServerAuthSession } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -173,6 +176,8 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
 
   const resolvedSearchParams = (await searchParams) ?? {};
   const messages = await fetchMessagesForIdentityIds(supabase, [user.id]);
+  const activeSubscription = await loadActiveSubscription(supabase, user.id);
+  const canSendDirectMessages = canDirectMessageUsers(activeSubscription);
 
   const summaryMap = new Map<
     string,
@@ -279,7 +284,21 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
                   <MessageList conversationKey={selectedConversationKey} currentUserId={user.id} messages={selectedMessages} />
 
                   <div className="shrink-0 border-t border-white/10 bg-[#101010] px-3 py-3 backdrop-blur-xl">
-                    <ChatInput conversationKey={selectedConversationKey} recipientLookup={replyRecipientLookup} placeholder="Type a message..." />
+                    {canSendDirectMessages ? (
+                      <ChatInput
+                        conversationKey={selectedConversationKey}
+                        recipientLookup={replyRecipientLookup}
+                        placeholder="Type a message..."
+                        canDirectMessage
+                      />
+                    ) : (
+                      <div className="flex flex-col gap-3 rounded-[1.3rem] border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-white/78 sm:flex-row sm:items-center sm:justify-between">
+                        <p>A monthly subscription is required to send direct messages.</p>
+                        <Button asChild className="w-fit bg-[#ff5a74] text-white hover:bg-[#e84a66]">
+                          <Link href="/dashboard/subscription">Upgrade now</Link>
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (

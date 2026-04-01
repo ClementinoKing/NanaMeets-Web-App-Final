@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
 import { fetchProfilesForIdentityIds } from "@/lib/message-feed";
+import { loadActiveSubscription } from "@/lib/subscriptions";
 
 type SendMessageParams = {
   supabase: SupabaseClient<Database>;
@@ -10,6 +11,16 @@ type SendMessageParams = {
 };
 
 export async function sendMessage({ supabase, senderId, recipientLookup, message }: SendMessageParams) {
+  const activeSubscription = await loadActiveSubscription(supabase, senderId);
+
+  if (!activeSubscription || activeSubscription.tier !== "Monthly" || !activeSubscription.end_date) {
+    throw new Error("A monthly subscription is required to send direct messages.");
+  }
+
+  if (new Date(activeSubscription.end_date).getTime() <= Date.now()) {
+    throw new Error("Your monthly subscription has expired. Renew to send direct messages.");
+  }
+
   const lookup = recipientLookup.trim();
 
   if (!lookup) {

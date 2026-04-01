@@ -1,10 +1,12 @@
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DashboardLocationSync } from "@/components/dashboard/dashboard-location-sync";
-import { SwipeDeck, type SwipeProfile } from "@/components/dashboard/swipe-deck";
+import { SwipeDeckHost } from "@/components/dashboard/swipe-deck-host";
+import type { SwipeProfile } from "@/components/dashboard/swipe-deck";
 import { getServerAuthSession } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 import { getOppositeGenderFilter } from "@/lib/gender-filter";
+import { canDirectMessageUsers, loadActiveSubscription } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 
@@ -134,6 +136,9 @@ export default async function DashboardPage() {
     .eq("user_id", user.id)
     .maybeSingle();
 
+  const activeSubscription = await loadActiveSubscription(supabase, user.id);
+  const canSendDirectMessages = canDirectMessageUsers(activeSubscription);
+
   const rpcPeople = await fetchUnswipedUsers(
     supabase,
     user.id,
@@ -163,7 +168,7 @@ export default async function DashboardPage() {
           hasLocation={profile?.lat !== null && profile?.lng !== null}
         />
 
-        <SwipeDeck currentUserId={user.id} profiles={profiles} />
+        <SwipeDeckHost canDirectMessageUsers={canSendDirectMessages} currentUserId={user.id} profiles={profiles} />
       </div>
     </section>
   );

@@ -217,6 +217,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      subscription: {
+        Row: {
+          id: number;
+          created_at: string;
+          user_id: string | null;
+          start_date: string | null;
+          plan: number | null;
+          end_date: string | null;
+          tier: string | null;
+          referral: string | null;
+        };
+        Insert: {
+          id?: number;
+          created_at?: string;
+          user_id?: string | null;
+          start_date?: string | null;
+          plan?: number | null;
+          end_date?: string | null;
+          tier?: string | null;
+          referral?: string | null;
+        };
+        Update: {
+          id?: number;
+          created_at?: string;
+          user_id?: string | null;
+          start_date?: string | null;
+          plan?: number | null;
+          end_date?: string | null;
+          tier?: string | null;
+          referral?: string | null;
+        };
+        Relationships: [];
+      };
       user_sessions: {
         Row: {
           id: number;

@@ -177,7 +177,11 @@ export default function PrivacyPage() {
                   </li>
                   <li className="text-base leading-relaxed text-gray-300">
                     <strong>Account Deletion:</strong> You can request account deletion by contacting our
-                    support team.
+                    support team or visiting{" "}
+                    <Link href="/delete_account" className="text-white underline underline-offset-4">
+                      /delete_account
+                    </Link>
+                    .
                   </li>
                   <li className="text-base leading-relaxed text-gray-300">
                     <strong>Marketing Preferences:</strong> You may opt out of promotional emails or

@@ -11,6 +11,7 @@ import {
   fetchMessagesForIdentityIds,
   fetchProfilesForIdentityIds,
 } from "@/lib/message-feed";
+import { formatMembershipLabel, loadActiveSubscription } from "@/lib/subscriptions";
 import { getServerAuthSession } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -31,6 +32,7 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
     redirect("/create-profile");
   }
 
+  const activeSubscription = await loadActiveSubscription(supabase, user.id);
   const messageIdentityIds = [user.id];
 
   const displayName = profile?.f_name ?? user.email ?? "NanaMeets member";
@@ -132,7 +134,7 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
             displayName={displayName}
             matches={matches}
             location={location}
-            membershipLabel="Monthly Subscription"
+            membershipLabel={formatMembershipLabel(activeSubscription)}
             profileCompletion={profileCompletion * 10}
             profilePic={profile?.profile_pic ?? null}
           />
