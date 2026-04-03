@@ -158,8 +158,8 @@ export function SubscriptionPlansClient({
         userId,
         firstName: displayName || email || "User",
         email,
-        callbackUrl: getPaymentCallbackUrl(plan.id, window.location.origin),
-        returnUrl: getPaymentReturnUrl(plan.id, window.location.origin),
+        callbackUrl: getPaymentCallbackUrl(plan.id, userId, window.location.origin),
+        returnUrl: getPaymentReturnUrl(plan.id, userId, window.location.origin),
       });
 
       const { checkoutUrl } = await requestPaymentCheckout(payload, "Subscription checkout");

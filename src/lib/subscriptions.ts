@@ -302,6 +302,7 @@ export async function saveVerifiedSubscription(
     user_id: userId,
     start_date: startDate.toISOString(),
     end_date: endDate.toISOString(),
+    plan: plan.durationDays,
     tier: plan.tier,
     referral,
     tx_ref: txRef,

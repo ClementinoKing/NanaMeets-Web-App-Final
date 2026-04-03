@@ -1,4 +1,4 @@
-export function getPaymentCallbackUrl(tier?: string, fallbackOrigin?: string) {
+export function getPaymentCallbackUrl(tier?: string, userId?: string, fallbackOrigin?: string) {
   const configured = process.env.NEXT_PUBLIC_PAYMENT_CALLBACK_URL?.trim();
   const url = configured
     ? new URL(configured)
@@ -14,10 +14,14 @@ export function getPaymentCallbackUrl(tier?: string, fallbackOrigin?: string) {
     url.searchParams.set("tier", tier);
   }
 
+  if (userId) {
+    url.searchParams.set("uid", userId);
+  }
+
   return url.toString();
 }
 
-export function getPaymentReturnUrl(tier?: string, fallbackOrigin?: string) {
+export function getPaymentReturnUrl(tier?: string, userId?: string, fallbackOrigin?: string) {
   const configured = process.env.NEXT_PUBLIC_PAYMENT_RETURN_URL?.trim();
   const url = configured
     ? new URL(configured)
@@ -31,6 +35,10 @@ export function getPaymentReturnUrl(tier?: string, fallbackOrigin?: string) {
 
   if (tier) {
     url.searchParams.set("tier", tier);
+  }
+
+  if (userId) {
+    url.searchParams.set("uid", userId);
   }
 
   return url.toString();
