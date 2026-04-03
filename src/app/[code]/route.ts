@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,61 +25,102 @@ function getSupabaseEnv() {
   };
 }
 
+function createShortLinkClient() {
+  const env = getSupabaseEnv();
+
+  if (!env) {
+    return null;
+  }
+
+  return createClient(env.supabaseUrl, env.serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
 function resolveCode(request: NextRequest) {
   return request.nextUrl.pathname.split("/").filter(Boolean)[0] ?? "";
 }
 
-async function loadShortLink(code: string) {
-  const env = getSupabaseEnv();
+function resolveDestinationUrl(rawTargetUrl: string, origin: string) {
+  const trimmed = rawTargetUrl.trim();
 
-  if (!env) {
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const direct = new URL(trimmed);
+
+    if (direct.protocol === "http:" || direct.protocol === "https:") {
+      return direct;
+    }
+  } catch {
+    // Fall through to normalized forms below.
+  }
+
+  if (trimmed.startsWith("//")) {
+    try {
+      return new URL(`https:${trimmed}`);
+    } catch {
+      return null;
+    }
+  }
+
+  if (trimmed.startsWith("/")) {
+    try {
+      return new URL(trimmed, origin);
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    return new URL(`https://${trimmed}`);
+  } catch {
+    return null;
+  }
+}
+
+async function loadShortLink(code: string) {
+  const supabase = createShortLinkClient();
+
+  if (!supabase) {
     return { error: "Short-link service is not configured" as const };
   }
 
-  const queryUrl = new URL(`${env.supabaseUrl}/rest/v1/nanameets_short_links`);
-  queryUrl.searchParams.set("select", "id,target_url,is_active,clicks_count");
-  queryUrl.searchParams.set("slug", `eq.${code}`);
-  queryUrl.searchParams.set("limit", "1");
+  const { data, error } = await supabase
+    .from("nanameets_short_links")
+    .select("id,target_url,is_active,clicks_count")
+    .eq("slug", code)
+    .maybeSingle();
 
-  const response = await fetch(queryUrl, {
-    headers: {
-      apikey: env.serviceRoleKey,
-      Authorization: `Bearer ${env.serviceRoleKey}`,
-    },
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    const body = await response.text().catch(() => "");
-    console.error("Failed to load short link", {
-      status: response.status,
-      body,
-    });
+  if (error) {
+    console.error("Failed to load short link", error);
     return { error: "Unable to load short link" as const };
   }
 
-  const records = (await response.json()) as ShortLinkRow[];
-  return { record: records[0] ?? null };
+  return { record: data as ShortLinkRow | null };
 }
 
 async function incrementClicks(codeId: number, currentClicks: number | null) {
-  const env = getSupabaseEnv();
+  const supabase = createShortLinkClient();
 
-  if (!env) {
+  if (!supabase) {
     return;
   }
 
-  await fetch(`${env.supabaseUrl}/rest/v1/nanameets_short_links?id=eq.${codeId}`, {
-    method: "PATCH",
-    headers: {
-      apikey: env.serviceRoleKey,
-      Authorization: `Bearer ${env.serviceRoleKey}`,
-      "Content-Type": "application/json",
-      Prefer: "return=minimal",
-    },
-    body: JSON.stringify({ clicks_count: (currentClicks ?? 0) + 1 }),
-    cache: "no-store",
-  }).catch(() => null);
+  const { error } = await supabase
+    .from("nanameets_short_links")
+    .update({ clicks_count: (currentClicks ?? 0) + 1 })
+    .eq("id", codeId);
+
+  if (error) {
+    console.error("Failed to increment short-link clicks", error);
+  }
 }
 
 async function handleShortLink(request: NextRequest, countClick: boolean) {
@@ -102,15 +144,9 @@ async function handleShortLink(request: NextRequest, countClick: boolean) {
     return NextResponse.json({ error: "Gone" }, { status: 410 });
   }
 
-  let destination: URL;
+  const destination = resolveDestinationUrl(result.record.target_url, request.nextUrl.origin);
 
-  try {
-    destination = new URL(result.record.target_url);
-  } catch {
-    return NextResponse.json({ error: "Invalid destination" }, { status: 500 });
-  }
-
-  if (destination.protocol !== "http:" && destination.protocol !== "https:") {
+  if (!destination) {
     return NextResponse.json({ error: "Invalid destination" }, { status: 500 });
   }
 
