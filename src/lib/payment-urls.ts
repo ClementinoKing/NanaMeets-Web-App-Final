@@ -1,27 +1,37 @@
-export function getPaymentCallbackUrl(fallbackOrigin?: string) {
+export function getPaymentCallbackUrl(tier?: string, fallbackOrigin?: string) {
   const configured = process.env.NEXT_PUBLIC_PAYMENT_CALLBACK_URL?.trim();
+  const url = configured
+    ? new URL(configured)
+    : fallbackOrigin
+      ? new URL("/subscription/callback", fallbackOrigin)
+      : null;
 
-  if (configured) {
-    return configured;
+  if (!url) {
+    return "/subscription/callback";
   }
 
-  if (fallbackOrigin) {
-    return new URL("/subscription/callback", fallbackOrigin).toString();
+  if (tier) {
+    url.searchParams.set("tier", tier);
   }
 
-  return "/subscription/callback";
+  return url.toString();
 }
 
-export function getPaymentReturnUrl(fallbackOrigin?: string) {
+export function getPaymentReturnUrl(tier?: string, fallbackOrigin?: string) {
   const configured = process.env.NEXT_PUBLIC_PAYMENT_RETURN_URL?.trim();
+  const url = configured
+    ? new URL(configured)
+    : fallbackOrigin
+      ? new URL("/subscription/return", fallbackOrigin)
+      : null;
 
-  if (configured) {
-    return configured;
+  if (!url) {
+    return "/subscription/return";
   }
 
-  if (fallbackOrigin) {
-    return new URL("/subscription/return", fallbackOrigin).toString();
+  if (tier) {
+    url.searchParams.set("tier", tier);
   }
 
-  return "/subscription/return";
+  return url.toString();
 }

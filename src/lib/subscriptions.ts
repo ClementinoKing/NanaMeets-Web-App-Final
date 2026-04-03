@@ -285,7 +285,7 @@ export async function saveVerifiedSubscription(
   }: {
     userId: string;
     plan: SubscriptionPlan;
-    txRef: string;
+    txRef?: string | null;
     verifiedAt: string;
     paymentStatus: string;
     paymentReference: string | null;
@@ -312,9 +312,27 @@ export async function saveVerifiedSubscription(
     verified_at: verifiedAt,
   };
 
-  const { error } = await supabase
-    .from("subscription")
-    .upsert(record, { onConflict: "tx_ref" });
+  if (!txRef) {
+    const { error } = await supabase.from("subscription").insert({
+      user_id: userId,
+      tier: plan.tier,
+      referral,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return record;
+  }
+
+  const { error } = await supabase.from("subscription").upsert(
+    {
+      ...record,
+      tx_ref: txRef ?? null,
+    },
+    { onConflict: "tx_ref" },
+  );
 
   if (error) {
     throw error;

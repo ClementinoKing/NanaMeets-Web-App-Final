@@ -57,9 +57,9 @@ export function SubscriptionPaymentModal({
         return;
       }
 
-      const data = event.data as { type?: string; txRef?: string; tier?: string; status?: string } | undefined;
+      const data = event.data as { type?: string; tier?: string; status?: string } | undefined;
       if (data?.type === "nanameets-payment-success" && data.status === "success") {
-        onSuccess(`message:${data.txRef ?? checkoutUrl}`);
+        onSuccess(`message:${checkoutUrl}`);
       }
     };
 

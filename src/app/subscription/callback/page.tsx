@@ -5,7 +5,6 @@ import { Loader2, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SubscriptionCallbackSuccess } from "@/components/dashboard/subscription-callback-success";
 import { loadCurrentProfile } from "@/lib/current-profile";
-import { verifyPayChanguTransaction } from "@/lib/paychangu";
 import { getSubscriptionPlanById, saveVerifiedSubscription } from "@/lib/subscriptions";
 import { getServerAuthSession } from "@/lib/supabase/server";
 
@@ -26,19 +25,7 @@ export default async function SubscriptionCallbackPage({
 }: Readonly<{
   searchParams?: Record<string, QueryValue>;
 }>) {
-  const txRef = readQueryValue(searchParams?.tx_ref ?? searchParams?.txRef ?? searchParams?.reference);
-
-  if (!txRef) {
-    return (
-      <ResultCard
-        title="Missing transaction reference"
-        description="PayChangu returned without a transaction reference, so the subscription could not be verified."
-        icon={<ShieldAlert className="h-6 w-6 text-rose-500" />}
-        ctaLabel="Back to subscriptions"
-        ctaHref="/dashboard/subscription"
-      />
-    );
-  }
+  const tierId = readQueryValue(searchParams?.tier ?? searchParams?.plan_id ?? searchParams?.planId);
 
   const { supabase, user } = await getServerAuthSession();
 
@@ -55,37 +42,12 @@ export default async function SubscriptionCallbackPage({
     redirect("/create-profile");
   }
 
-  let verification;
-
-  try {
-    verification = await verifyPayChanguTransaction(txRef);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to verify the transaction";
+  const plan = getSubscriptionPlanById(tierId);
+  if (!plan) {
     return (
       <ResultCard
-        title="Verification failed"
-        description={message}
-        icon={<ShieldAlert className="h-6 w-6 text-rose-500" />}
-        ctaLabel="Retry subscription"
-        ctaHref="/dashboard/subscription"
-      />
-    );
-  }
-
-  const verified = verification?.data;
-  const paymentStatus = verified?.status?.toLowerCase();
-  const meta = verified?.meta && typeof verified.meta === "object" ? verified.meta : null;
-  const planId = typeof meta?.plan_id === "string" ? meta.plan_id : null;
-  const plan = getSubscriptionPlanById(planId);
-  const verifiedUserId = typeof meta?.uuid === "string" ? meta.uuid : null;
-  const paymentReference = typeof verified?.reference === "string" ? verified.reference : txRef;
-  const verifiedAt = new Date().toISOString();
-
-  if (!plan || verifiedUserId !== user.id) {
-    return (
-      <ResultCard
-        title="Payment payload mismatch"
-        description="The verified transaction did not match the expected NanaMeets subscription details."
+        title="Missing plan information"
+        description="PayChangu returned without a plan tier, so the subscription could not be activated."
         icon={<ShieldAlert className="h-6 w-6 text-rose-500" />}
         ctaLabel="Back to subscriptions"
         ctaHref="/dashboard/subscription"
@@ -93,51 +55,20 @@ export default async function SubscriptionCallbackPage({
     );
   }
 
-  if (!["success", "successful", "completed", "paid"].includes(paymentStatus ?? "")) {
-    return (
-      <ResultCard
-        title="Payment not completed"
-        description="PayChangu did not confirm a successful payment for this transaction."
-        icon={<ShieldAlert className="h-6 w-6 text-rose-500" />}
-        ctaLabel="Try again"
-        ctaHref="/dashboard/subscription"
-      />
-    );
-  }
-
   try {
-    const paymentAmount = typeof verified?.amount === "number" ? verified.amount : plan.amount;
-    const paymentCurrency = typeof verified?.currency === "string" ? verified.currency : plan.currency;
-
     await saveVerifiedSubscription(supabase, {
       userId: user.id,
       plan,
-      txRef,
-      verifiedAt,
-      paymentStatus: paymentStatus ?? "successful",
-      paymentReference,
-      amount: paymentAmount,
-      currency: paymentCurrency,
+      txRef: null,
+      verifiedAt: new Date().toISOString(),
+      paymentStatus: "successful",
+      paymentReference: null,
+      amount: plan.amount,
+      currency: plan.currency,
       referral: profile.referral ?? null,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to save the verified subscription";
-    const missingPaymentColumns =
-      /tx_ref|payment_reference|payment_status|verified_at|currency|amount/i.test(message) ||
-      /column .* does not exist/i.test(message);
-
-    if (missingPaymentColumns) {
-      const { error: legacyError } = await supabase.from("subscription").insert({
-        user_id: user.id,
-        tier: plan.tier,
-        referral: profile.referral ?? null,
-      });
-
-      if (!legacyError) {
-        redirect(`/dashboard/subscription?status=success&tier=${plan.id}`);
-      }
-    }
-
     return (
       <ResultCard
         title="Could not save subscription"
@@ -149,7 +80,7 @@ export default async function SubscriptionCallbackPage({
     );
   }
 
-  return <SubscriptionCallbackSuccess tier={plan.id} txRef={txRef} />;
+  return <SubscriptionCallbackSuccess tier={plan.id} />;
 }
 
 function ResultCard({

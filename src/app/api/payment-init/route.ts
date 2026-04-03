@@ -11,13 +11,13 @@ import { getServerAuthSession } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-function buildCallbackUrl(request: NextRequest, pathname: string) {
+function buildCallbackUrl(request: NextRequest, pathname: string, tier?: string | null) {
   if (pathname === "/subscription/callback") {
-    return getPaymentCallbackUrl(request.headers.get("origin") ?? request.nextUrl.origin);
+    return getPaymentCallbackUrl(tier ?? undefined, request.headers.get("origin") ?? request.nextUrl.origin);
   }
 
   if (pathname === "/subscription/return") {
-    return getPaymentReturnUrl(request.headers.get("origin") ?? request.nextUrl.origin);
+    return getPaymentReturnUrl(tier ?? undefined, request.headers.get("origin") ?? request.nextUrl.origin);
   }
 
   const origin = request.headers.get("origin") ?? request.nextUrl.origin;
@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
           userId: user.id,
           firstName: profile?.f_name ?? user.email ?? "User",
           email: user.email ?? profile?.email ?? "",
-          callbackUrl: buildCallbackUrl(request, "/subscription/callback"),
-          returnUrl: buildCallbackUrl(request, "/subscription/return"),
+          callbackUrl: buildCallbackUrl(request, "/subscription/callback", plan.id),
+          returnUrl: buildCallbackUrl(request, "/subscription/return", plan.id),
         });
       })();
 

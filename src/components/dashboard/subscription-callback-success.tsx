@@ -4,17 +4,15 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 type SubscriptionCallbackSuccessProps = {
-  txRef: string;
   tier: string;
 };
 
-export function SubscriptionCallbackSuccess({ txRef, tier }: SubscriptionCallbackSuccessProps) {
+export function SubscriptionCallbackSuccess({ tier }: SubscriptionCallbackSuccessProps) {
   const router = useRouter();
 
   useEffect(() => {
     const message = {
       type: "nanameets-payment-success",
-      txRef,
       tier,
       status: "success",
     };
@@ -26,11 +24,11 @@ export function SubscriptionCallbackSuccess({ txRef, tier }: SubscriptionCallbac
     }
 
     const timeoutId = window.setTimeout(() => {
-      router.replace(`/dashboard/subscription?status=success&tier=${encodeURIComponent(tier)}&tx_ref=${encodeURIComponent(txRef)}`);
+      router.replace(`/dashboard/subscription?status=success&tier=${encodeURIComponent(tier)}`);
     }, 300);
 
     return () => window.clearTimeout(timeoutId);
-  }, [router, tier, txRef]);
+  }, [router, tier]);
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,90,116,0.18),_transparent_30%),linear-gradient(180deg,#09090b_0%,#111827_100%)] px-4 py-10 text-white">
