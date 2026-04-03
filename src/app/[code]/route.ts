@@ -37,7 +37,7 @@ async function loadShortLink(code: string) {
 
   const queryUrl = new URL(`${env.supabaseUrl}/rest/v1/nanameets_short_links`);
   queryUrl.searchParams.set("select", "id,target_url,is_active,clicks_count");
-  queryUrl.searchParams.set("code", `eq.${code}`);
+  queryUrl.searchParams.set("slug", `eq.${code}`);
   queryUrl.searchParams.set("limit", "1");
 
   const response = await fetch(queryUrl, {
