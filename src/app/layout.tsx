@@ -33,6 +33,10 @@ export default function RootLayout({
       className={`${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <head>
+        <meta
+          name="google-adsense-account"
+          content="ca-pub-7322140828117790"
+        />
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7322140828117790"
