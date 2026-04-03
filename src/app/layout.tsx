@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
-import Script from "next/script";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -37,11 +36,10 @@ export default function RootLayout({
           name="google-adsense-account"
           content="ca-pub-7322140828117790"
         />
-        <Script
+        <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7322140828117790"
           crossOrigin="anonymous"
-          strategy="afterInteractive"
         />
       </head>
       <body className="min-h-dvh bg-background text-foreground">
