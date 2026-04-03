@@ -314,9 +314,8 @@ export async function saveVerifiedSubscription(
 
   if (!txRef) {
     const { error } = await supabase.from("subscription").insert({
-      user_id: userId,
-      tier: plan.tier,
-      referral,
+      ...record,
+      tx_ref: null,
     });
 
     if (error) {

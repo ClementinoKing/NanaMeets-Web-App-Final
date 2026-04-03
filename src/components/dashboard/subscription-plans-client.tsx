@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Loader2, ShieldCheck, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -247,6 +248,7 @@ export function SubscriptionPlansClient({
             setSelectedPlanId(null);
           }}
           onSuccess={() => {
+            toast.success("Payment successful");
             setCheckoutUrl(null);
             const nextUrl = selectedPlanId
               ? `/dashboard/subscription?status=success&tier=${selectedPlanId}`

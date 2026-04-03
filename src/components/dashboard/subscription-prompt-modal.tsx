@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, CheckCircle2, Loader2, Sparkles, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -178,6 +179,7 @@ export function SubscriptionPromptModal({
         checkoutUrl={checkoutUrl}
         onClose={() => setCheckoutUrl(null)}
         onSuccess={() => {
+          toast.success("Payment successful");
           setCheckoutUrl(null);
           router.refresh();
         }}
