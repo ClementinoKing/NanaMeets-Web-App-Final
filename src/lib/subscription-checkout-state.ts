@@ -5,60 +5,77 @@ export type SubscriptionCheckoutState = {
 
 const STORAGE_KEY = "nanameets.subscription.checkout";
 
-function getStorage() {
+function getStorages() {
   if (typeof window === "undefined") {
-    return null;
+    return [];
   }
 
-  return window.sessionStorage;
+  return [window.localStorage, window.sessionStorage];
 }
 
 export function saveSubscriptionCheckoutState(state: SubscriptionCheckoutState) {
-  const storage = getStorage();
+  const storages = getStorages();
 
-  if (!storage) {
+  if (storages.length === 0) {
     return;
   }
 
-  storage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const raw = JSON.stringify(state);
+  for (const storage of storages) {
+    try {
+      storage.setItem(STORAGE_KEY, raw);
+    } catch {
+      // Ignore storage quota or privacy-mode failures and keep going.
+    }
+  }
 }
 
 export function readSubscriptionCheckoutState() {
-  const storage = getStorage();
+  const storages = getStorages();
 
-  if (!storage) {
+  if (storages.length === 0) {
     return null;
   }
 
-  const raw = storage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Partial<SubscriptionCheckoutState> | null;
-    const tier = typeof parsed?.tier === "string" ? parsed.tier.trim() : "";
-    const userId = typeof parsed?.userId === "string" ? parsed.userId.trim() : "";
-
-    if (!tier && !userId) {
-      return null;
+  for (const storage of storages) {
+    const raw = storage.getItem(STORAGE_KEY);
+    if (!raw) {
+      continue;
     }
 
-    return {
-      tier,
-      userId,
-    };
-  } catch {
-    return null;
+    try {
+      const parsed = JSON.parse(raw) as Partial<SubscriptionCheckoutState> | null;
+      const tier = typeof parsed?.tier === "string" ? parsed.tier.trim() : "";
+      const userId = typeof parsed?.userId === "string" ? parsed.userId.trim() : "";
+
+      if (!tier && !userId) {
+        continue;
+      }
+
+      return {
+        tier,
+        userId,
+      };
+    } catch {
+      // Try the next storage fallback.
+    }
   }
+
+  return null;
 }
 
 export function clearSubscriptionCheckoutState() {
-  const storage = getStorage();
+  const storages = getStorages();
 
-  if (!storage) {
+  if (storages.length === 0) {
     return;
   }
 
-  storage.removeItem(STORAGE_KEY);
+  for (const storage of storages) {
+    try {
+      storage.removeItem(STORAGE_KEY);
+    } catch {
+      // Ignore storage cleanup failures.
+    }
+  }
 }
