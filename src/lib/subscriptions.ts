@@ -90,7 +90,9 @@ const PLAN_PRICE_FIELDS: Record<SubscriptionPlanId, { current: keyof PriceRow; p
   monthly: { current: "monthly", previous: "dis_monthly" },
 };
 
-function parseAmount(value: string | null | undefined, fallback: number) {
+type PriceValue = string | number | null | undefined;
+
+function parseAmount(value: PriceValue, fallback: number) {
   if (!value) {
     return fallback;
   }
@@ -99,7 +101,7 @@ function parseAmount(value: string | null | undefined, fallback: number) {
   return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : fallback;
 }
 
-function formatPriceLabel(value: string | null | undefined, fallback: string) {
+function formatPriceLabel(value: PriceValue, fallback: string) {
   if (!value || !String(value).trim()) {
     return fallback;
   }
@@ -215,7 +217,7 @@ export function formatMembershipLabel(subscription: SubscriptionRow | null) {
     return "Subscribe";
   }
 
-  const endDate = formatSubscriptionEndDate(subscription.end_date);
+  const endDate = formatSubscriptionEndDate(subscription?.end_date ?? null);
   const tierLabel = subscription?.tier ?? "Subscription";
 
   if (endDate) {
@@ -230,7 +232,7 @@ export function canDirectMessageUsers(subscription: SubscriptionRow | null) {
     return false;
   }
 
-  if (subscription.tier !== "Monthly") {
+  if (subscription?.tier !== "Monthly") {
     return false;
   }
 
