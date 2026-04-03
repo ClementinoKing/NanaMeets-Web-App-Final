@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { PostgrestError } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { getCurrentUserSafely } from "@/lib/supabase/browser-auth";
 
@@ -64,6 +65,11 @@ export function PresenceSync() {
       });
 
       if (error) {
+        const pgError = error as PostgrestError;
+        if (pgError.code === "42501" || pgError.code === "403" || pgError.message.toLowerCase().includes("row-level security")) {
+          return;
+        }
+
         console.error("Failed to sync presence", error);
       }
     };
