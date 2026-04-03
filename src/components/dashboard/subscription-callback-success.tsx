@@ -2,14 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { clearSubscriptionCheckoutState, readSubscriptionCheckoutState } from "@/lib/subscription-checkout-state";
 
 type SubscriptionCallbackSuccessProps = {
-  tier: string;
-  userId: string;
+  tier?: string | null;
+  userId?: string | null;
 };
 
 export function SubscriptionCallbackSuccess({ tier, userId }: SubscriptionCallbackSuccessProps) {
   const [error, setError] = useState<string | null>(null);
+  const [loadingState, setLoadingState] = useState(true);
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -19,13 +21,23 @@ export function SubscriptionCallbackSuccess({ tier, userId }: SubscriptionCallba
 
     startedRef.current = true;
 
+    const savedState = readSubscriptionCheckoutState();
+    const resolvedTier = tier ?? savedState?.tier ?? null;
+    const resolvedUserId = userId ?? savedState?.userId ?? null;
+
+    if (!resolvedTier || !resolvedUserId) {
+      setLoadingState(false);
+      setError("Could not restore your selected plan. Please try again.");
+      return;
+    }
+
     const syncSubscription = async () => {
       const response = await fetch("/api/subscription/activate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ tier, userId }),
+        body: JSON.stringify({ tier: resolvedTier, userId: resolvedUserId }),
       });
 
       const data = (await response.json().catch(() => null)) as { error?: string; status?: string; tier?: string } | null;
@@ -39,10 +51,11 @@ export function SubscriptionCallbackSuccess({ tier, userId }: SubscriptionCallba
 
     void syncSubscription()
       .then(() => {
+        clearSubscriptionCheckoutState();
         window.parent?.postMessage(
           {
             type: "nanameets-payment-success",
-            tier,
+            tier: resolvedTier,
             status: "success",
           },
           window.location.origin,
@@ -51,6 +64,9 @@ export function SubscriptionCallbackSuccess({ tier, userId }: SubscriptionCallba
       .catch((syncError) => {
         const message = syncError instanceof Error ? syncError.message : "Could not sync the subscription";
         setError(message);
+      })
+      .finally(() => {
+        setLoadingState(false);
       });
   }, [tier, userId]);
 
@@ -60,7 +76,11 @@ export function SubscriptionCallbackSuccess({ tier, userId }: SubscriptionCallba
         <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-white/50">Payment verified</p>
         <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white">Subscription activated</h1>
         <p className="mt-3 text-sm leading-6 text-white/70">
-          {error ? error : "We are activating your subscription and closing the payment modal."}
+          {error
+            ? error
+            : loadingState
+            ? "Restoring your selected plan..."
+            : "We are activating your subscription and closing the payment modal."}
         </p>
         <div className="mt-6 flex items-center justify-center gap-3 text-white/60">
           <Loader2 className="h-4.5 w-4.5 animate-spin" />
