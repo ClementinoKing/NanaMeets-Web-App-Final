@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { cn } from "@/lib/utils";
 import { buildSubscriptionCheckoutPayload } from "@/lib/subscription-checkout";
 import { SUBSCRIPTION_PLANS, type SubscriptionPlan } from "@/lib/subscriptions";
+import { getPaymentCallbackUrl, getPaymentReturnUrl } from "@/lib/payment-urls";
 import { requestPaymentCheckout } from "@/lib/payment-gateway";
 import { SubscriptionPaymentModal } from "@/components/dashboard/subscription-payment-modal";
 
@@ -120,8 +121,8 @@ export function SubscriptionPromptModal({
         userId,
         firstName: displayName || email || "User",
         email,
-        callbackUrl: new URL("/subscription/callback", window.location.origin).toString(),
-        returnUrl: new URL("/subscription/return", window.location.origin).toString(),
+        callbackUrl: getPaymentCallbackUrl(window.location.origin),
+        returnUrl: getPaymentReturnUrl(window.location.origin),
       });
 
       const { checkoutUrl } = await requestPaymentCheckout(payload, "Subscription checkout");

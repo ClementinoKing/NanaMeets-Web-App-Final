@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SubscriptionCallbackSuccess } from "@/components/dashboard/subscription-callback-success";
 import { loadCurrentProfile } from "@/lib/current-profile";
 import { verifyPayChanguTransaction } from "@/lib/paychangu";
 import { getSubscriptionPlanById, saveVerifiedSubscription } from "@/lib/subscriptions";
@@ -148,7 +149,7 @@ export default async function SubscriptionCallbackPage({
     );
   }
 
-  redirect(`/dashboard/subscription?status=success&tier=${plan.id}`);
+  return <SubscriptionCallbackSuccess tier={plan.id} txRef={txRef} />;
 }
 
 function ResultCard({

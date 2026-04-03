@@ -52,6 +52,17 @@ export function SubscriptionPaymentModal({
       return undefined;
     }
 
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      const data = event.data as { type?: string; txRef?: string; tier?: string; status?: string } | undefined;
+      if (data?.type === "nanameets-payment-success" && data.status === "success") {
+        onSuccess(`message:${data.txRef ?? checkoutUrl}`);
+      }
+    };
+
     const check = () => {
       const iframe = iframeRef.current;
       if (!iframe) {
@@ -80,8 +91,12 @@ export function SubscriptionPaymentModal({
 
     const intervalId = window.setInterval(check, 750);
     check();
+    window.addEventListener("message", handleMessage);
 
-    return () => window.clearInterval(intervalId);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("message", handleMessage);
+    };
   }, [checkoutUrl, onCancel, onSuccess, open]);
 
   if (!open || !checkoutUrl) {

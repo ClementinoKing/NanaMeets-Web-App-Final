@@ -14,6 +14,7 @@ import {
   type SubscriptionPlanId,
   type SubscriptionRow,
 } from "@/lib/subscriptions";
+import { getPaymentCallbackUrl, getPaymentReturnUrl } from "@/lib/payment-urls";
 import { requestPaymentCheckout } from "@/lib/payment-gateway";
 import { SubscriptionPaymentModal } from "@/components/dashboard/subscription-payment-modal";
 
@@ -156,8 +157,8 @@ export function SubscriptionPlansClient({
         userId,
         firstName: displayName || email || "User",
         email,
-        callbackUrl: new URL("/subscription/callback", window.location.origin).toString(),
-        returnUrl: new URL("/subscription/return", window.location.origin).toString(),
+        callbackUrl: getPaymentCallbackUrl(window.location.origin),
+        returnUrl: getPaymentReturnUrl(window.location.origin),
       });
 
       const { checkoutUrl } = await requestPaymentCheckout(payload, "Subscription checkout");

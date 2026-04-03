@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadCurrentProfile } from "@/lib/current-profile";
+import { getPaymentCallbackUrl, getPaymentReturnUrl } from "@/lib/payment-urls";
 import {
   buildSubscriptionCheckoutPayload,
   requestPayChanguCheckout,
@@ -11,6 +12,14 @@ import { getServerAuthSession } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 
 function buildCallbackUrl(request: NextRequest, pathname: string) {
+  if (pathname === "/subscription/callback") {
+    return getPaymentCallbackUrl(request.headers.get("origin") ?? request.nextUrl.origin);
+  }
+
+  if (pathname === "/subscription/return") {
+    return getPaymentReturnUrl(request.headers.get("origin") ?? request.nextUrl.origin);
+  }
+
   const origin = request.headers.get("origin") ?? request.nextUrl.origin;
   return new URL(pathname, origin).toString();
 }
