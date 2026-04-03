@@ -49,6 +49,11 @@ async function loadShortLink(code: string) {
   });
 
   if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    console.error("Failed to load short link", {
+      status: response.status,
+      body,
+    });
     return { error: "Unable to load short link" as const };
   }
 
