@@ -162,8 +162,8 @@ export default async function DashboardPage() {
       }));
 
   return (
-    <section className="-mx-4 -my-6 flex min-h-[calc(100vh-3rem)] items-center justify-center bg-white px-4 py-6 text-slate-950 dark:bg-black dark:text-white sm:-mx-6 sm:-my-8 lg:-mx-8 lg:-my-8">
-      <div className="w-full">
+    <section className="-mx-4 -my-6 flex h-full min-h-0 items-start justify-start overflow-hidden bg-white px-4 py-0 text-slate-950 dark:bg-black dark:text-white sm:-mx-6 sm:-my-8 sm:items-center sm:justify-center sm:py-6 lg:-mx-8 lg:-my-8">
+      <div className="h-full w-full">
         <DashboardLocationSync
           userId={user.id}
           hasLocation={profile?.lat !== null && profile?.lng !== null}

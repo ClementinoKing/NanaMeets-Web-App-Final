@@ -11,7 +11,7 @@ const SwipeDeck = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="mx-auto flex min-h-[76vh] w-full max-w-[560px] items-center justify-center rounded-[1.75rem] border border-white/10 bg-[#090909] shadow-[0_20px_80px_rgba(0,0,0,0.65)]" />
+      <div className="mx-auto flex h-full min-h-[520px] w-full max-w-[min(560px,calc(100vw-1rem))] items-center justify-center rounded-[1.5rem] border border-white/10 bg-[#090909] shadow-[0_20px_80px_rgba(0,0,0,0.65)]" />
     ),
   },
 );

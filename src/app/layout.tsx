@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -19,6 +20,12 @@ export const metadata: Metadata = {
   icons: {
     icon: "/Fav-Icon.svg",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

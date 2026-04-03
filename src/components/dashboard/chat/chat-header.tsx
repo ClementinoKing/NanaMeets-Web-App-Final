@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Ban, Flag, MoreHorizontal, X } from "lucide-react";
+import { Ban, ChevronLeft, Flag, MoreHorizontal, X } from "lucide-react";
 
 interface ChatHeaderProps {
   name: string;
@@ -13,9 +13,10 @@ interface ChatHeaderProps {
   online: boolean;
   typingLabel?: string | null;
   className?: string;
+  backHref?: string | null;
 }
 
-export function ChatHeader({ name, avatarUrl, online, typingLabel, className }: ChatHeaderProps) {
+export function ChatHeader({ name, avatarUrl, online, typingLabel, className, backHref }: ChatHeaderProps) {
   const router = useRouter();
   const [showMoreOptions, setShowMoreOptions] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement | null>(null);
@@ -53,8 +54,21 @@ export function ChatHeader({ name, avatarUrl, online, typingLabel, className }: 
         className
       )}
     >
-      <div className="flex items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
+      <div className="flex items-center justify-between gap-3 px-3 py-3 sm:gap-4 sm:px-4 sm:py-3.5 sm:px-5">
         <div className="flex min-w-0 items-center gap-3">
+          {backHref ? (
+            <Button
+              aria-label="Back to messages"
+              className="h-10 w-10 rounded-full border border-border/70 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
+              size="icon"
+              variant="ghost"
+              type="button"
+              onClick={() => router.replace(backHref)}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          ) : null}
+
           <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
             {avatarUrl ? (
               <Image alt={name} className="object-cover" fill sizes="48px" src={avatarUrl} />
@@ -126,16 +140,18 @@ export function ChatHeader({ name, avatarUrl, online, typingLabel, className }: 
             </div>
           ) : null}
 
-          <Button
-            aria-label="Close conversation"
-            className="h-10 w-10 rounded-full border border-border/70 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
-            size="icon"
-            variant="ghost"
-            type="button"
-            onClick={() => router.replace("/dashboard")}
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          {backHref ? null : (
+            <Button
+              aria-label="Close conversation"
+              className="h-10 w-10 rounded-full border border-border/70 bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
+              size="icon"
+              variant="ghost"
+              type="button"
+              onClick={() => router.replace("/dashboard")}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
         </div>
       </div>
     </header>

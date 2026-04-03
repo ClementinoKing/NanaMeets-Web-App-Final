@@ -200,30 +200,32 @@ export function TinderSidebar({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.08),_transparent_30%),linear-gradient(180deg,#070707_0%,#050505_100%)] text-white">
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3">
-        <div className="flex flex-col gap-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
           <Link
-            className="block rounded-[1.6rem] bg-[linear-gradient(160deg,#ff476f_0%,#ec2f7a_55%,#db2e87_100%)] p-4 shadow-[0_20px_50px_rgba(236,47,122,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(236,47,122,0.34)]"
+            className="block rounded-[1.4rem] bg-[linear-gradient(160deg,#ff476f_0%,#ec2f7a_55%,#db2e87_100%)] p-3.5 shadow-[0_20px_50px_rgba(236,47,122,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(236,47,122,0.34)] sm:rounded-[1.6rem] sm:p-4"
             href="/dashboard/profile"
           >
             <div className="flex items-center gap-3">
-              <SidebarAvatar className="h-16 w-16 ring-3 ring-white/18" name={displayName} src={profilePic} />
+              <SidebarAvatar className="h-14 w-14 ring-3 ring-white/18 sm:h-16 sm:w-16" name={displayName} src={profilePic} />
               <div className="min-w-0">
-                <p className="truncate font-heading text-[1.25rem] font-semibold leading-none tracking-tight text-white">
+                <p className="truncate font-heading text-[1.1rem] font-semibold leading-none tracking-tight text-white sm:text-[1.25rem]">
                   {displayName}
                   {age ? `, ${age}` : ""}
                 </p>
-                <p className="mt-1.5 text-[0.8rem] font-medium leading-none text-white/[0.9]">{membershipLabel}</p>
-                <p className="mt-1.5 truncate text-[0.72rem] leading-none text-white/[0.75]">{location}</p>
+                <p className="mt-1.5 text-[0.76rem] font-medium leading-none text-white/[0.9] sm:text-[0.8rem]">
+                  {membershipLabel}
+                </p>
+                <p className="mt-1.5 truncate text-[0.7rem] leading-none text-white/[0.75] sm:text-[0.72rem]">{location}</p>
               </div>
             </div>
 
-            <section className="mt-5 space-y-2">
+            <section className="mt-4 space-y-2 sm:mt-5">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-[0.85rem] font-medium tracking-tight text-white/[0.9]">Profile Completion</p>
-                <span className="text-[0.85rem] font-semibold text-white">{completion}%</span>
+                <p className="text-[0.78rem] font-medium tracking-tight text-white/[0.9] sm:text-[0.85rem]">Profile Completion</p>
+                <span className="text-[0.78rem] font-semibold text-white sm:text-[0.85rem]">{completion}%</span>
               </div>
-              <div className="h-3 overflow-hidden rounded-full bg-black/15 ring-1 ring-white/10">
+              <div className="h-2.5 overflow-hidden rounded-full bg-black/15 ring-1 ring-white/10 sm:h-3">
                 <div
                   className="h-full rounded-full bg-white shadow-[0_0_0_1px_rgba(255,255,255,0.25)] transition-[width] duration-500 ease-out"
                   style={{ width: `${completion}%` }}
@@ -235,26 +237,26 @@ export function TinderSidebar({
           <section className="grid grid-cols-2 gap-2.5">
             <Link
               className={cn(
-                "flex h-12 items-center justify-center gap-2.5 rounded-[0.95rem] border border-white/[0.12] bg-black/20 px-3 text-white shadow-[0_1px_0_rgba(255,255,255,0.03),inset_0_1px_0_rgba(255,255,255,0.03)] transition duration-200 hover:-translate-y-0.5 hover:border-white/[0.2] hover:bg-white/[0.05]",
+                "flex h-11 items-center justify-center gap-2.5 rounded-[0.95rem] border border-white/[0.12] bg-black/20 px-3 text-white shadow-[0_1px_0_rgba(255,255,255,0.03),inset_0_1px_0_rgba(255,255,255,0.03)] transition duration-200 hover:-translate-y-0.5 hover:border-white/[0.2] hover:bg-white/[0.05] sm:h-12",
                 homeActive ? "border-white/[0.18] bg-white/[0.06]" : ""
               )}
               href="/dashboard"
             >
-              <Home className={cn("h-5 w-5 shrink-0", homeActive ? "fill-white stroke-[1.8]" : "stroke-[1.8]")} />
-              <span className="font-heading text-[0.95rem] font-semibold tracking-tight">Home</span>
+              <Home className={cn("h-4.5 w-4.5 shrink-0 sm:h-5 sm:w-5", homeActive ? "fill-white stroke-[1.8]" : "stroke-[1.8]")} />
+              <span className="font-heading text-[0.9rem] font-semibold tracking-tight sm:text-[0.95rem]">Home</span>
             </Link>
 
             <Link
               className={cn(
-                "flex h-12 items-center justify-center gap-2.5 rounded-[0.95rem] border border-white/[0.12] bg-black/20 px-3 text-white shadow-[0_1px_0_rgba(255,255,255,0.03),inset_0_1px_0_rgba(255,255,255,0.03)] transition duration-200 hover:-translate-y-0.5 hover:border-white/[0.2] hover:bg-white/[0.05]",
+                "flex h-11 items-center justify-center gap-2.5 rounded-[0.95rem] border border-white/[0.12] bg-black/20 px-3 text-white shadow-[0_1px_0_rgba(255,255,255,0.03),inset_0_1px_0_rgba(255,255,255,0.03)] transition duration-200 hover:-translate-y-0.5 hover:border-white/[0.2] hover:bg-white/[0.05] sm:h-12",
                 exploreActive ? "border-white/[0.18] bg-white/[0.06]" : ""
               )}
               href="/dashboard/discover"
             >
               <Sparkles
-                className={cn("h-5 w-5 shrink-0", exploreActive ? "fill-white stroke-[1.8]" : "stroke-[1.8]")}
+                className={cn("h-4.5 w-4.5 shrink-0 sm:h-5 sm:w-5", exploreActive ? "fill-white stroke-[1.8]" : "stroke-[1.8]")}
               />
-              <span className="font-heading text-[0.95rem] font-semibold tracking-tight">Explore</span>
+              <span className="font-heading text-[0.9rem] font-semibold tracking-tight sm:text-[0.95rem]">Explore</span>
             </Link>
           </section>
 
@@ -262,28 +264,28 @@ export function TinderSidebar({
             <Link
               aria-label="Likes"
               className={cn(
-                "flex h-11 items-center justify-center rounded-[0.9rem] border border-[#7c132d]/80 bg-black/25 text-[#ff7994] transition hover:-translate-y-0.5 hover:border-[#ff7994]/70 hover:bg-[#ff7994]/[0.08]",
+                "flex h-10 items-center justify-center rounded-[0.9rem] border border-[#7c132d]/80 bg-black/25 text-[#ff7994] transition hover:-translate-y-0.5 hover:border-[#ff7994]/70 hover:bg-[#ff7994]/[0.08] sm:h-11",
                 likesActive ? "border-[#ff7994]/70 bg-[#ff7994]/[0.08]" : ""
               )}
               href="/dashboard/likes"
             >
-              <Heart className="h-4.5 w-4.5 fill-current stroke-[1.6]" />
+              <Heart className="h-4 w-4 fill-current stroke-[1.6] sm:h-4.5 sm:w-4.5" />
             </Link>
 
             <Link
               aria-label="Tickets"
-              className="flex h-11 items-center justify-center rounded-[0.9rem] border border-[#7e5b10]/80 bg-black/25 text-[#f2b21c] transition hover:-translate-y-0.5 hover:border-[#f2b21c]/70 hover:bg-[#f2b21c]/[0.08]"
+              className="flex h-10 items-center justify-center rounded-[0.9rem] border border-[#7e5b10]/80 bg-black/25 text-[#f2b21c] transition hover:-translate-y-0.5 hover:border-[#f2b21c]/70 hover:bg-[#f2b21c]/[0.08] sm:h-11"
               href="/dashboard/settings"
             >
-              <Ticket className="h-4.5 w-4.5 stroke-[1.8]" />
+              <Ticket className="h-4 w-4 stroke-[1.8] sm:h-4.5 sm:w-4.5" />
             </Link>
 
             <Link
-              className="flex h-11 items-center justify-center gap-2 rounded-[0.9rem] border border-[#2357c2]/70 bg-black/25 px-3 text-[#6da2ff] transition hover:-translate-y-0.5 hover:border-[#6da2ff]/70 hover:bg-[#6da2ff]/[0.08]"
+              className="flex h-10 items-center justify-center gap-2 rounded-[0.9rem] border border-[#2357c2]/70 bg-black/25 px-3 text-[#6da2ff] transition hover:-translate-y-0.5 hover:border-[#6da2ff]/70 hover:bg-[#6da2ff]/[0.08] sm:h-11"
               href="/dashboard/discover"
             >
-              <Zap className="h-4.5 w-4.5 stroke-[1.8]" />
-              <span className="font-heading text-[0.9rem] font-semibold tracking-tight">Boosts</span>
+              <Zap className="h-4 w-4 stroke-[1.8] sm:h-4.5 sm:w-4.5" />
+              <span className="font-heading text-[0.85rem] font-semibold tracking-tight sm:text-[0.9rem]">Boosts</span>
               <SidebarBadge>0</SidebarBadge>
             </Link>
           </section>
@@ -292,7 +294,7 @@ export function TinderSidebar({
             <div className="flex items-end gap-6 border-b border-white/10">
               <button
                 className={cn(
-                  "relative -mb-px pb-3 font-heading text-[1.2rem] font-semibold tracking-tight transition-colors",
+                  "relative -mb-px pb-3 font-heading text-[1.05rem] font-semibold tracking-tight transition-colors sm:text-[1.2rem]",
                   activeTab === "messages" ? "text-[#ff5f7d]" : "text-white/52 hover:text-white/75"
                 )}
                 onClick={() => setActiveTab("messages")}
@@ -311,7 +313,7 @@ export function TinderSidebar({
 
               <button
                 className={cn(
-                  "relative -mb-px pb-3 font-heading text-[1.2rem] font-semibold tracking-tight transition-colors",
+                  "relative -mb-px pb-3 font-heading text-[1.05rem] font-semibold tracking-tight transition-colors sm:text-[1.2rem]",
                   activeTab === "matches" ? "text-[#ff5f7d]" : "text-white/52 hover:text-white/75"
                 )}
                 onClick={() => setActiveTab("matches")}
@@ -326,10 +328,10 @@ export function TinderSidebar({
 
             {activeTab === "messages" ? (
               <div className="mt-4 space-y-3">
-                <label className="flex h-12 items-center gap-2.5 rounded-[0.95rem] border border-white/[0.12] bg-white/[0.06] px-3.5 text-white/[0.8] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                  <Search className="h-4.5 w-4.5 shrink-0 text-white/45" />
+                <label className="flex h-11 items-center gap-2.5 rounded-[0.95rem] border border-white/[0.12] bg-white/[0.06] px-3.5 text-white/[0.8] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] sm:h-12">
+                  <Search className="h-4 w-4 shrink-0 text-white/45 sm:h-4.5 sm:w-4.5" />
                   <input
-                    className="h-full w-full bg-transparent text-[0.9rem] outline-none placeholder:text-white/40"
+                    className="h-full w-full bg-transparent text-[0.86rem] outline-none placeholder:text-white/40 sm:text-[0.9rem]"
                     onChange={(event) => setSearchTerm(event.target.value)}
                     placeholder="Search messages..."
                     value={searchTerm}
@@ -351,7 +353,7 @@ export function TinderSidebar({
                       >
                         <div className="flex items-start gap-2.5 px-2 py-2.5">
                           <div className="relative mt-0.5">
-                            <SidebarAvatar className="h-12 w-12" name={conversation.name} src={conversation.profilePic} />
+                            <SidebarAvatar className="h-11 w-11 sm:h-12 sm:w-12" name={conversation.name} src={conversation.profilePic} />
                             {!conversation.sentByMe &&
                             conversation.userId !== selectedConversationId &&
                             (() => {
@@ -365,15 +367,15 @@ export function TinderSidebar({
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <p className="truncate font-heading text-[0.98rem] font-semibold leading-tight text-white">
+                                <p className="truncate font-heading text-[0.92rem] font-semibold leading-tight text-white sm:text-[0.98rem]">
                                   {conversation.name}
                                 </p>
-                                <p className="mt-0.5 truncate text-[0.82rem] leading-5 text-white/[0.68]">
+                                <p className="mt-0.5 truncate text-[0.78rem] leading-5 text-white/[0.68] sm:text-[0.82rem]">
                                   {conversation.latestMessage ?? "No message yet"}
                                 </p>
                               </div>
 
-                              <time className="shrink-0 pt-0.5 text-[0.72rem] text-white/[0.38]">
+                              <time className="shrink-0 pt-0.5 text-[0.68rem] text-white/[0.38] sm:text-[0.72rem]">
                                 {formatLatestAt(conversation.latestAt)}
                               </time>
                             </div>
@@ -391,7 +393,7 @@ export function TinderSidebar({
             ) : (
               <div className="mt-4">
                 {matches.length ? (
-                  <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {matches.map((match) => (
                       <Link
                         key={match.userId}
@@ -405,10 +407,10 @@ export function TinderSidebar({
                         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.06)_0%,rgba(0,0,0,0.1)_50%,rgba(0,0,0,0.88)_100%)]" />
 
                         <div className="absolute inset-x-0 bottom-0 p-3">
-                          <p className="truncate font-heading text-[1.2rem] font-semibold leading-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
+                          <p className="truncate font-heading text-[1.05rem] font-semibold leading-tight text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)] sm:text-[1.2rem]">
                             {match.name}
                           </p>
-                          <p className="mt-1 truncate text-[0.82rem] leading-5 text-white/75 drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)]">
+                          <p className="mt-1 truncate text-[0.76rem] leading-5 text-white/75 drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)] sm:text-[0.82rem]">
                             {[match.city, match.area].filter(Boolean).join(" · ") || "Location not set"}
                           </p>
                         </div>
@@ -433,10 +435,10 @@ export function TinderSidebar({
           onClick={handleSignOut}
           type="button"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-[0.8rem] border border-white/[0.75] text-white">
-            <LogOut className="h-4.5 w-4.5 stroke-[2.1]" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-[0.8rem] border border-white/[0.75] text-white sm:h-10 sm:w-10">
+            <LogOut className="h-4 w-4 stroke-[2.1] sm:h-4.5 sm:w-4.5" />
           </span>
-          <span className="font-heading text-[0.98rem] font-semibold leading-none tracking-tight">
+          <span className="font-heading text-[0.92rem] font-semibold leading-none tracking-tight sm:text-[0.98rem]">
             {signingOut ? "Logging out..." : "Logout"}
           </span>
         </button>

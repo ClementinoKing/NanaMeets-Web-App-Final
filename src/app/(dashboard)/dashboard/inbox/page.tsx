@@ -5,7 +5,8 @@ import { Briefcase, Building2, GraduationCap, Heart, MapPin, Ruler, UserRoundPen
 import { ChatHeader } from "@/components/dashboard/chat/chat-header";
 import { ChatInput } from "@/components/dashboard/chat/chat-input";
 import { MessageList } from "@/components/dashboard/chat/message-list";
-import { fetchMessagesForIdentityIds, fetchProfilesForIdentityIds } from "@/lib/message-feed";
+import { MobileInboxFlow } from "@/components/dashboard/chat/mobile-inbox-flow";
+import { fetchMatchedUsersProfilesForIdentityIds, fetchMessagesForIdentityIds, fetchProfilesForIdentityIds } from "@/lib/message-feed";
 import { fetchOnlineUserIds } from "@/lib/presence";
 import { loadActiveSubscription, canDirectMessageUsers } from "@/lib/subscriptions";
 import { getServerAuthSession } from "@/lib/supabase/server";
@@ -21,6 +22,17 @@ interface InboxPageProps {
 }
 
 type ProfileRow = Awaited<ReturnType<typeof fetchProfilesForIdentityIds>>[number];
+
+type MobileMatch = {
+  userId: string;
+  name: string;
+  profilePic: string | null;
+  age: number | null;
+  city: string | null;
+  area: string | null;
+  conversation: boolean | null;
+  createdAt: string;
+};
 
 const inboxThemeVars: CSSProperties = {
   ["--background" as never]: "0 0% 1%",
@@ -214,6 +226,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
 
   const otherIds = [...summaryMap.keys()];
   const profiles = otherIds.length ? await fetchProfilesForIdentityIds(supabase, otherIds) : [];
+  const matchedRows = await fetchMatchedUsersProfilesForIdentityIds(supabase, [user.id]);
 
   const conversations = [...summaryMap.values()]
     .map((conversation) => {
@@ -228,6 +241,34 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
       };
     })
     .sort((left, right) => new Date(right.latestAt).getTime() - new Date(left.latestAt).getTime());
+
+  const matches = matchedRows
+    .filter((row) => (row.user_ids ?? []).includes(user.id))
+    .map((row) => {
+      const userIds = row.user_ids ?? [];
+      const otherUserId = userIds.find((identityId) => identityId !== user.id) ?? null;
+
+      if (!otherUserId) {
+        return null;
+      }
+
+      const profile = profiles.find((item) => item.user_id === otherUserId || item.id === otherUserId) ?? null;
+      const fallbackIndex = userIds.indexOf(otherUserId);
+
+      return {
+        userId: otherUserId,
+        name: profile?.f_name ?? String(row.f_names?.[fallbackIndex] ?? otherUserId),
+        profilePic: profile?.profile_pic ?? row.profile_pics?.[fallbackIndex] ?? null,
+        age: profile?.age ?? (typeof row.ages?.[fallbackIndex] === "number" ? row.ages?.[fallbackIndex] : null),
+        city: profile?.city ?? row.cities?.[fallbackIndex] ?? null,
+        area: profile?.area ?? row.areas?.[fallbackIndex] ?? null,
+        conversation: row.conversation,
+        createdAt: row.created_at ?? new Date().toISOString(),
+      };
+    })
+    .filter((value): value is MobileMatch => Boolean(value))
+    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime())
+    .slice(0, 8);
 
   const requestedConversationId = resolvedSearchParams.conversation ?? null;
   const requestedProfile =
@@ -254,6 +295,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
       : null) ??
     conversations[0] ??
     null;
+  const mobileSelectedConversation = requestedConversationId ? selectedConversation : null;
   const selectedMessages = selectedConversation?.messages ?? [];
   const replyRecipientLookup = selectedConversation?.email ?? selectedConversation?.userId ?? "";
   const selectedConversationKey = selectedConversation?.userId ?? replyRecipientLookup;
@@ -269,7 +311,7 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(20,184,166,0.09),_transparent_35%)]" />
       <div className="relative mx-auto h-full w-full max-w-[1560px] px-3 py-3 lg:px-5">
-        <div className="grid h-full gap-3 xl:grid-cols-[minmax(0,1.45fr)_380px]">
+        <div className="hidden h-full gap-3 xl:grid xl:grid-cols-[minmax(0,1.45fr)_380px]">
           <div className="flex min-h-0 min-w-0 flex-col gap-3">
             <ChatHeader
               avatarUrl={selectedConversation?.profilePic ?? null}
@@ -310,6 +352,20 @@ export default async function InboxPage({ searchParams }: InboxPageProps) {
           </div>
 
           <RightRail selectedConversation={selectedConversation} selectedProfile={selectedConversation?.profile ?? null} />
+        </div>
+
+        <div className="h-full xl:hidden">
+          <MobileInboxFlow
+            canSendDirectMessages={canSendDirectMessages}
+            conversations={conversations}
+            currentUserId={user.id}
+            matches={matches}
+            replyRecipientLookup={replyRecipientLookup}
+            selectedConversation={mobileSelectedConversation}
+            selectedConversationKey={selectedConversationKey}
+            selectedIsOnline={selectedIsOnline}
+            selectedMessages={selectedMessages}
+          />
         </div>
       </div>
     </section>

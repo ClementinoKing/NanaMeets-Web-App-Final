@@ -8,10 +8,12 @@ import Lottie from "lottie-react";
 import {
   ArrowRight,
   ArrowUp,
+  Bell,
   Heart,
   MapPin,
   RotateCcw,
   MessageCircleMore,
+  SlidersHorizontal,
   Zap,
   X,
 } from "lucide-react";
@@ -39,16 +41,16 @@ interface SwipeDeckProps {
 
 function EmptyDeckState() {
   return (
-    <div className="mx-auto flex min-h-[76vh] w-full max-w-[560px] flex-col items-center justify-center rounded-[2rem] border border-white/10 bg-[#0c0c0c] px-8 py-10 text-center shadow-[0_20px_80px_rgba(0,0,0,0.55)]">
-      <div className="mt-4 flex h-44 w-44 items-center justify-center">
+    <div className="mx-auto flex min-h-[68svh] w-full max-w-[min(560px,calc(100vw-1rem))] flex-col items-center justify-center rounded-[1.5rem] border border-white/10 bg-[#0c0c0c] px-6 py-8 text-center shadow-[0_20px_80px_rgba(0,0,0,0.55)] sm:min-h-[76vh] sm:rounded-[2rem] sm:px-8 sm:py-10">
+      <div className="mt-4 flex h-36 w-36 items-center justify-center sm:h-44 sm:w-44">
         <Lottie animationData={heartYellowAnimation} loop autoplay />
       </div>
-      <h2 className="mt-1.5 text-[1.9rem] font-semibold tracking-tight text-[#ff4f6b]">All Caught Up!</h2>
-      <p className="mt-2 max-w-md text-[1.05rem] leading-7 text-white/70">
+      <h2 className="mt-1.5 text-[1.6rem] font-semibold tracking-tight text-[#ff4f6b] sm:text-[1.9rem]">All Caught Up!</h2>
+      <p className="mt-2 max-w-md text-[0.98rem] leading-7 text-white/70 sm:text-[1.05rem]">
         Check back later for new profiles, new matches are coming soon. Keep an eye out!
       </p>
       <button
-        className="mt-9 inline-flex items-center justify-center rounded-full bg-[#ff4f6b] px-8 py-4 text-[1.05rem] font-semibold text-white shadow-[0_16px_36px_rgba(255,79,107,0.28)] transition hover:bg-[#ff6078]"
+        className="mt-8 inline-flex items-center justify-center rounded-full bg-[#ff4f6b] px-7 py-3.5 text-[0.98rem] font-semibold text-white shadow-[0_16px_36px_rgba(255,79,107,0.28)] transition hover:bg-[#ff6078] sm:mt-9 sm:px-8 sm:py-4 sm:text-[1.05rem]"
         type="button"
         onClick={() => window.location.reload()}
       >
@@ -84,6 +86,41 @@ function ActionButton({
     <button className={cn(base, className)} onClick={onClick} type="button">
       {children}
     </button>
+  );
+}
+
+function MobileHeader() {
+  return (
+    <div className="sticky top-0 z-40 -mx-1 mb-4 border-b border-white/5 bg-[linear-gradient(180deg,rgba(8,8,8,0.96),rgba(8,8,8,0.9))] px-1 pb-3 pt-[calc(env(safe-area-inset-top)+0.5rem)] backdrop-blur-xl md:hidden">
+      <div className="flex items-center justify-between gap-3">
+        <div className="relative h-11 w-24 shrink-0">
+          <Image
+            alt="Nana Meets"
+            className="object-contain object-left"
+            fill
+            sizes="96px"
+            src="/images/Nana Meets Logo RL.png"
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            aria-label="Filters"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[0.8rem] border border-white/12 bg-white/[0.03] text-[#ff5f7d] shadow-[0_10px_24px_rgba(0,0,0,0.35)]"
+            type="button"
+          >
+            <SlidersHorizontal className="h-4.5 w-4.5" />
+          </button>
+          <button
+            aria-label="Notifications"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[0.8rem] border border-white/12 bg-white/[0.03] text-[#ff5f7d] shadow-[0_10px_24px_rgba(0,0,0,0.35)]"
+            type="button"
+          >
+            <Bell className="h-4.5 w-4.5" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -317,16 +354,20 @@ export function SwipeDeck({ profiles, currentUserId, canDirectMessageUsers, onRe
     : "";
 
   return (
-    <div className="mx-auto flex min-h-[76vh] w-full max-w-[560px] flex-col items-center justify-center">
+    <div className="mx-auto flex h-full min-h-0 w-full max-w-[min(560px,calc(100vw-1rem))] flex-col items-start justify-start pt-0 sm:min-h-[76vh] md:items-center md:justify-center">
+      <div className="w-full px-1 md:hidden">
+        <MobileHeader />
+      </div>
+
       <div
-        className="relative w-full select-none"
+        className="relative w-full flex-1 select-none md:flex-none"
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endPointerGesture}
         onPointerCancel={endPointerGesture}
         style={{ touchAction: "pan-y" }}
       >
-        <div className="relative aspect-[0.67] w-full">
+        <div className="relative h-full min-h-[520px] w-full sm:aspect-[0.67] md:h-auto">
           {visibleProfiles.map((profile, index) => {
             const isTop = index === 0;
             const profileImages = profile.profilePics ?? [];
@@ -347,7 +388,7 @@ export function SwipeDeck({ profiles, currentUserId, canDirectMessageUsers, onRe
               <div
                 key={profile.userId}
                 aria-hidden={!isTop}
-                className="absolute inset-0 overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#090909] shadow-[0_20px_80px_rgba(0,0,0,0.65)]"
+                className="absolute inset-0 overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#090909] shadow-[0_20px_80px_rgba(0,0,0,0.65)] sm:rounded-[1.75rem]"
                 style={{
                   ...stackStyle,
                   zIndex: 30 - index,
@@ -356,7 +397,7 @@ export function SwipeDeck({ profiles, currentUserId, canDirectMessageUsers, onRe
                 }}
               >
                 {isTop ? (
-                  <div className="absolute inset-x-0 top-0 z-20 flex gap-1.5 px-3 pt-3">
+                    <div className="absolute inset-x-0 top-0 z-20 flex gap-1 px-3 pt-3 sm:gap-1.5">
                     {Array.from({ length: progressCount }).map((_, progressIndex) => (
                       <div
                         key={progressIndex}
@@ -382,7 +423,7 @@ export function SwipeDeck({ profiles, currentUserId, canDirectMessageUsers, onRe
                     <>
                       <div
                         className={cn(
-                          "absolute left-5 top-5 z-20 rounded-full border-4 px-5 py-2 text-[1rem] font-black uppercase tracking-[0.28em] shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-sm transition-transform duration-100",
+                          "absolute left-4 top-4 z-20 rounded-full border-4 px-4 py-1.5 text-[0.82rem] font-black uppercase tracking-[0.24em] shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-sm transition-transform duration-100 sm:left-5 sm:top-5 sm:px-5 sm:py-2 sm:text-[1rem] sm:tracking-[0.28em]",
                           dragOffset.x > 12
                             ? "border-[#39d98a] bg-[#39d98a]/20 text-[#39d98a] animate-pulse"
                             : "border-transparent bg-transparent text-transparent",
@@ -398,7 +439,7 @@ export function SwipeDeck({ profiles, currentUserId, canDirectMessageUsers, onRe
                       </div>
                       <div
                         className={cn(
-                          "absolute right-5 top-5 z-20 rounded-full border-4 px-5 py-2 text-[1rem] font-black uppercase tracking-[0.28em] shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-sm transition-transform duration-100",
+                          "absolute right-4 top-4 z-20 rounded-full border-4 px-4 py-1.5 text-[0.82rem] font-black uppercase tracking-[0.24em] shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-sm transition-transform duration-100 sm:right-5 sm:top-5 sm:px-5 sm:py-2 sm:text-[1rem] sm:tracking-[0.28em]",
                           dragOffset.x < -12
                             ? "border-[#ff5c74] bg-[#ff5c74]/20 text-[#ff5c74] animate-pulse"
                             : "border-transparent bg-transparent text-transparent",
@@ -418,32 +459,32 @@ export function SwipeDeck({ profiles, currentUserId, canDirectMessageUsers, onRe
                   {isTop ? (
                     <>
                       <button
-                        className="absolute right-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-white text-slate-700 shadow-lg transition-transform hover:scale-105"
+                        className="absolute right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-white text-slate-700 shadow-lg transition-transform hover:scale-105 sm:right-4 sm:h-12 sm:w-12"
                         onClick={nextImage}
                         type="button"
                       >
-                        <ArrowRight className="h-6 w-6" />
+                        <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6" />
                       </button>
 
                       <button
-                        className="absolute bottom-28 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition-transform hover:scale-105"
+                        className="absolute bottom-20 right-3 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg backdrop-blur transition-transform hover:scale-105 sm:bottom-28 sm:right-4 sm:h-10 sm:w-10"
                         onClick={() => setCurrentImageIndex(0)}
                         type="button"
                       >
-                        <ArrowUp className="h-5 w-5" />
+                        <ArrowUp className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
                       </button>
                     </>
                   ) : null}
 
-                  <div className="absolute inset-x-0 bottom-0 z-10 p-5 pb-20">
+                  <div className="absolute inset-x-0 bottom-0 z-10 p-4 pb-20 sm:p-5 sm:pb-20">
                     <div className="flex items-end justify-between gap-4">
                       <div className="min-w-0">
-                        <h2 className="truncate text-4xl font-semibold tracking-tight text-white">
+                        <h2 className="truncate text-2xl font-semibold tracking-tight text-white sm:text-4xl">
                           {profile.name}
                           {profile.age ? ` ${profile.age}` : ""}
                         </h2>
-                        <p className="mt-2 flex items-center gap-2 text-lg text-white/90">
-                          <MapPin className="h-4 w-4" />
+                        <p className="mt-2 flex items-center gap-2 text-sm text-white/90 sm:text-lg">
+                          <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           <span className="truncate">
                             {profile.distanceKm
                               ? `${profile.distanceKm.replace(/\s+/g, "").toUpperCase()} away`
@@ -460,26 +501,26 @@ export function SwipeDeck({ profiles, currentUserId, canDirectMessageUsers, onRe
         </div>
       </div>
 
-      <div className="relative z-30 -mt-6 flex flex-wrap items-center justify-center gap-4">
-        <ActionButton className="text-[#ffb547]" onClick={() => void undoLastSwipe()}>
-          <RotateCcw className="h-7 w-7" />
+      <div className="relative z-30 mt-4 flex flex-wrap items-center justify-center gap-3 sm:mt-6 sm:gap-4">
+        <ActionButton className="text-[#ffb547] md:h-14 md:w-14" onClick={() => void undoLastSwipe()}>
+          <RotateCcw className="h-6 w-6 sm:h-7 sm:w-7" />
         </ActionButton>
-        <ActionButton className="text-[#ff5c74]" onClick={() => triggerSwipeAction("dislike")}>
-          <X className="h-8 w-8" />
+        <ActionButton className="text-[#ff5c74] md:h-14 md:w-14" onClick={() => triggerSwipeAction("dislike")}>
+          <X className="h-7 w-7 sm:h-8 sm:w-8" />
         </ActionButton>
-        <ActionButton className="text-[#2f8cff]" onClick={() => triggerSwipeAction("boost")}>
-          <Zap className="h-7 w-7" />
+        <ActionButton className="text-[#2f8cff] md:h-14 md:w-14" onClick={() => triggerSwipeAction("boost")}>
+          <Zap className="h-6 w-6 sm:h-7 sm:w-7" />
         </ActionButton>
-        <ActionButton className="h-16 w-16 text-[#8fe04c]" onClick={() => triggerSwipeAction("like")}>
-          <Heart className="h-8 w-8" />
+        <ActionButton className="h-14 w-14 text-[#8fe04c] md:h-16 md:w-16" onClick={() => triggerSwipeAction("like")}>
+          <Heart className="h-7 w-7 sm:h-8 sm:w-8" />
         </ActionButton>
         {canDirectMessageUsers ? (
-          <ActionButton className="text-[#4ea1ff]" href={`/dashboard/inbox?conversation=${currentProfile.userId}`}>
-            <MessageCircleMore className="h-7 w-7" />
+          <ActionButton className="text-[#4ea1ff] md:h-14 md:w-14" href={`/dashboard/inbox?conversation=${currentProfile.userId}`}>
+            <MessageCircleMore className="h-6 w-6 sm:h-7 sm:w-7" />
           </ActionButton>
         ) : (
-          <ActionButton className="text-[#4ea1ff]" onClick={onRequestSubscription}>
-            <MessageCircleMore className="h-7 w-7" />
+          <ActionButton className="text-[#4ea1ff] md:h-14 md:w-14" onClick={onRequestSubscription}>
+            <MessageCircleMore className="h-6 w-6 sm:h-7 sm:w-7" />
           </ActionButton>
         )}
       </div>
