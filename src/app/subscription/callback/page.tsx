@@ -5,7 +5,7 @@ import { Loader2, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { loadCurrentProfile } from "@/lib/current-profile";
 import { verifyPayChanguTransaction } from "@/lib/paychangu";
-import { getSubscriptionPlanById } from "@/lib/subscriptions";
+import { getSubscriptionPlanById, saveVerifiedSubscription } from "@/lib/subscriptions";
 import { getServerAuthSession } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -77,6 +77,8 @@ export default async function SubscriptionCallbackPage({
   const planId = typeof meta?.plan_id === "string" ? meta.plan_id : null;
   const plan = getSubscriptionPlanById(planId);
   const verifiedUserId = typeof meta?.uuid === "string" ? meta.uuid : null;
+  const paymentReference = typeof verified?.reference === "string" ? verified.reference : txRef;
+  const verifiedAt = new Date().toISOString();
 
   if (!plan || verifiedUserId !== user.id) {
     return (
@@ -102,19 +104,43 @@ export default async function SubscriptionCallbackPage({
     );
   }
 
-  const { error } = await supabase.from("subscription").insert(
-    {
-      user_id: user.id,
-      tier: plan.tier,
-      referral: profile.referral ?? null,
-    },
-  );
+  try {
+    const paymentAmount = typeof verified?.amount === "number" ? verified.amount : plan.amount;
+    const paymentCurrency = typeof verified?.currency === "string" ? verified.currency : plan.currency;
 
-  if (error) {
+    await saveVerifiedSubscription(supabase, {
+      userId: user.id,
+      plan,
+      txRef,
+      verifiedAt,
+      paymentStatus: paymentStatus ?? "successful",
+      paymentReference,
+      amount: paymentAmount,
+      currency: paymentCurrency,
+      referral: profile.referral ?? null,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to save the verified subscription";
+    const missingPaymentColumns =
+      /tx_ref|payment_reference|payment_status|verified_at|currency|amount/i.test(message) ||
+      /column .* does not exist/i.test(message);
+
+    if (missingPaymentColumns) {
+      const { error: legacyError } = await supabase.from("subscription").insert({
+        user_id: user.id,
+        tier: plan.tier,
+        referral: profile.referral ?? null,
+      });
+
+      if (!legacyError) {
+        redirect(`/dashboard/subscription?status=success&tier=${plan.id}`);
+      }
+    }
+
     return (
       <ResultCard
         title="Could not save subscription"
-        description={error.message}
+        description={message}
         icon={<ShieldAlert className="h-6 w-6 text-rose-500" />}
         ctaLabel="Retry subscription"
         ctaHref="/dashboard/subscription"

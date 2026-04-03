@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { loadCurrentProfile } from "@/lib/current-profile";
-import { loadActiveSubscription } from "@/lib/subscriptions";
+import { getSubscriptionPlanId, loadActiveSubscription, loadSubscriptionPlans } from "@/lib/subscriptions";
 import { getServerAuthSession } from "@/lib/supabase/server";
 import { SubscriptionPlansClient } from "@/components/dashboard/subscription-plans-client";
 
@@ -27,6 +27,8 @@ export default async function SubscriptionPage({
   }
 
   const activeSubscription = await loadActiveSubscription(supabase, user.id);
+  const subscriptionPlans = await loadSubscriptionPlans(supabase);
+  const currentPlanId = getSubscriptionPlanId(activeSubscription);
   const flashMessage =
     typeof searchParams?.status === "string" && searchParams.status === "success"
       ? "Your payment was verified and your subscription is now active."
@@ -37,8 +39,11 @@ export default async function SubscriptionPage({
   return (
     <SubscriptionPlansClient
       activeSubscription={activeSubscription}
+      currentPlanId={currentPlanId}
+      plans={subscriptionPlans}
       displayName={profile.f_name ?? user.email ?? "NanaMeets member"}
       email={user.email ?? profile.email ?? ""}
+      userId={user.id}
       flashMessage={flashMessage}
     />
   );

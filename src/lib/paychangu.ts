@@ -64,10 +64,10 @@ export type PayChanguVerificationResponse = {
 };
 
 function getPayChanguApiKey() {
-  const apiKey = process.env.PAYCHANGU_API_KEY?.trim();
+  const apiKey = process.env.PAYCHANGU_API_KEY?.trim() || process.env.PAYMENT_API_KEY?.trim();
 
   if (!apiKey) {
-    throw new Error("PAYCHANGU_API_KEY is not configured");
+    throw new Error("Set PAYCHANGU_API_KEY or PAYMENT_API_KEY in the server environment");
   }
 
   return apiKey;

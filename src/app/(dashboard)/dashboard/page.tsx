@@ -6,7 +6,7 @@ import type { SwipeProfile } from "@/components/dashboard/swipe-deck";
 import { getServerAuthSession } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 import { getOppositeGenderFilter } from "@/lib/gender-filter";
-import { canDirectMessageUsers, loadActiveSubscription } from "@/lib/subscriptions";
+import { canDirectMessageUsers, loadActiveSubscription, loadSubscriptionPlans } from "@/lib/subscriptions";
 
 export const dynamic = "force-dynamic";
 
@@ -137,6 +137,7 @@ export default async function DashboardPage() {
     .maybeSingle();
 
   const activeSubscription = await loadActiveSubscription(supabase, user.id);
+  const subscriptionPlans = await loadSubscriptionPlans(supabase);
   const canSendDirectMessages = canDirectMessageUsers(activeSubscription);
 
   const rpcPeople = await fetchUnswipedUsers(
@@ -168,7 +169,12 @@ export default async function DashboardPage() {
           hasLocation={profile?.lat !== null && profile?.lng !== null}
         />
 
-        <SwipeDeckHost canDirectMessageUsers={canSendDirectMessages} currentUserId={user.id} profiles={profiles} />
+        <SwipeDeckHost
+          canDirectMessageUsers={canSendDirectMessages}
+          currentUserId={user.id}
+          profiles={profiles}
+          subscriptionPlans={subscriptionPlans}
+        />
       </div>
     </section>
   );

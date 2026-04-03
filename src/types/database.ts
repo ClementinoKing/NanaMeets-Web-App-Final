@@ -227,6 +227,12 @@ export interface Database {
           end_date: string | null;
           tier: string | null;
           referral: string | null;
+          tx_ref: string | null;
+          payment_reference: string | null;
+          payment_status: string | null;
+          amount: number | null;
+          currency: string | null;
+          verified_at: string | null;
         };
         Insert: {
           id?: number;
@@ -237,6 +243,12 @@ export interface Database {
           end_date?: string | null;
           tier?: string | null;
           referral?: string | null;
+          tx_ref?: string | null;
+          payment_reference?: string | null;
+          payment_status?: string | null;
+          amount?: number | null;
+          currency?: string | null;
+          verified_at?: string | null;
         };
         Update: {
           id?: number;
@@ -247,6 +259,51 @@ export interface Database {
           end_date?: string | null;
           tier?: string | null;
           referral?: string | null;
+          tx_ref?: string | null;
+          payment_reference?: string | null;
+          payment_status?: string | null;
+          amount?: number | null;
+          currency?: string | null;
+          verified_at?: string | null;
+        };
+        Relationships: [];
+      };
+      prices: {
+        Row: {
+          id: number;
+          created_at: string;
+          monthly: string | null;
+          weekly: string | null;
+          daily: string | null;
+          student: string | null;
+          dis_monthly: string | null;
+          dis_weekly: string | null;
+          dis_daily: string | null;
+          dis_student: string | null;
+        };
+        Insert: {
+          id?: number;
+          created_at?: string;
+          monthly?: string | null;
+          weekly?: string | null;
+          daily?: string | null;
+          student?: string | null;
+          dis_monthly?: string | null;
+          dis_weekly?: string | null;
+          dis_daily?: string | null;
+          dis_student?: string | null;
+        };
+        Update: {
+          id?: number;
+          created_at?: string;
+          monthly?: string | null;
+          weekly?: string | null;
+          daily?: string | null;
+          student?: string | null;
+          dis_monthly?: string | null;
+          dis_weekly?: string | null;
+          dis_daily?: string | null;
+          dis_student?: string | null;
         };
         Relationships: [];
       };

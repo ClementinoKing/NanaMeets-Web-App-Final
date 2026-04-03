@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import type { SwipeProfile } from "@/components/dashboard/swipe-deck";
 import { SubscriptionPromptModal } from "@/components/dashboard/subscription-prompt-modal";
+import type { SubscriptionPlan } from "@/lib/subscriptions";
 
 const SwipeDeck = dynamic(
   () => import("@/components/dashboard/swipe-deck").then((module) => module.SwipeDeck),
@@ -19,9 +20,10 @@ interface SwipeDeckHostProps {
   profiles: SwipeProfile[];
   currentUserId: string;
   canDirectMessageUsers: boolean;
+  subscriptionPlans: SubscriptionPlan[];
 }
 
-export function SwipeDeckHost({ profiles, currentUserId, canDirectMessageUsers }: SwipeDeckHostProps) {
+export function SwipeDeckHost({ profiles, currentUserId, canDirectMessageUsers, subscriptionPlans }: SwipeDeckHostProps) {
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   return (
@@ -32,7 +34,12 @@ export function SwipeDeckHost({ profiles, currentUserId, canDirectMessageUsers }
         onRequestSubscription={() => setShowSubscriptionModal(true)}
         profiles={profiles}
       />
-      <SubscriptionPromptModal open={showSubscriptionModal} onClose={() => setShowSubscriptionModal(false)} />
+      <SubscriptionPromptModal
+        onClose={() => setShowSubscriptionModal(false)}
+        open={showSubscriptionModal}
+        plans={subscriptionPlans}
+        userId={currentUserId}
+      />
     </>
   );
 }

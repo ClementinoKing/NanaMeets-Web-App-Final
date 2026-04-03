@@ -14,7 +14,7 @@ NanaMeets Web is the user platform for shared profiles, messages, and inbox mana
 1. Copy `.env.example` to `.env.local`.
 2. Fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from the NanaMeets App workspace.
 3. Add `SUPABASE_SERVICE_ROLE_KEY` so the public short-link redirect at `https://nanameets.com/{code}` can resolve and count clicks server-side.
-4. Add `PAYCHANGU_API_KEY` for the subscription checkout route if you want billing enabled in this web app.
+4. Set `NEXT_PUBLIC_PAYMENT_INIT_URL` to your secure Supabase Edge Function at `/functions/v1/payment-init`. If you keep the local `/api/payment-init` fallback, also set `PAYCHANGU_API_KEY` or `PAYMENT_API_KEY` on the server.
 5. Use the shared Supabase database and the existing `subscription` table so verified PayChangu payments are stored alongside the rest of the app data.
 6. If you need image uploads in the web app, the Next API route `/api/r2-presign` proxies to the deployed Supabase upload function (`r2-presign-web`, with fallback to the shared admin function). Keep the mobile app on its existing Supabase Edge Function so both clients do not overwrite each other.
 7. Start the app:

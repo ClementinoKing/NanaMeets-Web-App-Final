@@ -79,7 +79,72 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   },
 ];
 
+type PriceRow = Database["public"]["Tables"]["prices"]["Row"];
+
 export type SubscriptionRow = Database["public"]["Tables"]["subscription"]["Row"];
+
+const SUBSCRIPTION_PLAN_IDS = new Set<SubscriptionPlanId>(SUBSCRIPTION_PLANS.map((plan) => plan.id));
+const PLAN_PRICE_FIELDS: Record<SubscriptionPlanId, { current: keyof PriceRow; previous: keyof PriceRow }> = {
+  daily: { current: "daily", previous: "dis_daily" },
+  weekly: { current: "weekly", previous: "dis_weekly" },
+  monthly: { current: "monthly", previous: "dis_monthly" },
+};
+
+function parseAmount(value: string | null | undefined, fallback: number) {
+  if (!value) {
+    return fallback;
+  }
+
+  const numericValue = Number(String(value).replace(/[^\d.]/g, ""));
+  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : fallback;
+}
+
+function formatPriceLabel(value: string | null | undefined, fallback: string) {
+  if (!value || !String(value).trim()) {
+    return fallback;
+  }
+
+  const trimmed = String(value).trim();
+  const numericValue = Number(trimmed.replace(/[^\d.]/g, ""));
+
+  if (Number.isFinite(numericValue) && numericValue > 0) {
+    return `MK ${numericValue.toLocaleString("en-US")}`;
+  }
+
+  if (trimmed.toUpperCase().startsWith("MK")) {
+    return trimmed;
+  }
+
+  return `MK ${trimmed}`;
+}
+
+function parseSubscriptionExpiry(subscription: SubscriptionRow | null) {
+  if (!subscription?.end_date) {
+    return null;
+  }
+
+  const parsed = new Date(subscription.end_date);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed;
+}
+
+export function isSubscriptionActive(subscription: SubscriptionRow | null) {
+  const expiry = parseSubscriptionExpiry(subscription);
+
+  return Boolean(subscription?.tier && expiry && expiry.getTime() > Date.now());
+}
+
+export function getSubscriptionPlanId(subscription: SubscriptionRow | null): SubscriptionPlanId | null {
+  if (!subscription?.tier) {
+    return null;
+  }
+
+  const planId = subscription.tier.toLowerCase();
+  return SUBSCRIPTION_PLAN_IDS.has(planId as SubscriptionPlanId) ? (planId as SubscriptionPlanId) : null;
+}
 
 export function getSubscriptionPlanById(planId: string | null | undefined) {
   if (!planId) {
@@ -87,6 +152,45 @@ export function getSubscriptionPlanById(planId: string | null | undefined) {
   }
 
   return SUBSCRIPTION_PLANS.find((plan) => plan.id === planId) ?? null;
+}
+
+export async function loadSubscriptionPlans(supabase: SupabaseClient<Database>) {
+  try {
+    const { data, error } = await supabase
+      .from("prices")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const priceRow = data as PriceRow | null;
+
+    if (error) {
+      console.warn("Failed to load subscription prices, using fallback plans:", error.message);
+      return SUBSCRIPTION_PLANS;
+    }
+
+    if (!priceRow) {
+      return SUBSCRIPTION_PLANS;
+    }
+
+    return SUBSCRIPTION_PLANS.map((plan) => {
+      const fieldMap = PLAN_PRICE_FIELDS[plan.id];
+      if (!fieldMap) {
+        return plan;
+      }
+
+      return {
+        ...plan,
+        amount: parseAmount(priceRow[fieldMap.current], plan.amount),
+        newPrice: formatPriceLabel(priceRow[fieldMap.current], plan.newPrice),
+        oldPrice: formatPriceLabel(priceRow[fieldMap.previous], plan.oldPrice),
+      };
+    });
+  } catch (error) {
+    console.warn("Unexpected error loading subscription prices, using fallback plans:", error);
+    return SUBSCRIPTION_PLANS;
+  }
 }
 
 export function formatSubscriptionEndDate(endDate: string | null) {
@@ -107,17 +211,22 @@ export function formatSubscriptionEndDate(endDate: string | null) {
 }
 
 export function formatMembershipLabel(subscription: SubscriptionRow | null) {
-  if (!subscription) {
-    return "No active subscription";
+  if (!isSubscriptionActive(subscription)) {
+    return "Subscribe";
   }
 
   const endDate = formatSubscriptionEndDate(subscription.end_date);
-  const tierLabel = subscription.tier ?? "Subscription";
-  return endDate ? `${tierLabel} active until ${endDate}` : `${tierLabel} active`;
+  const tierLabel = subscription?.tier ?? "Subscription";
+
+  if (endDate) {
+    return `${tierLabel} active until ${endDate}`;
+  }
+
+  return `${tierLabel} active`;
 }
 
 export function canDirectMessageUsers(subscription: SubscriptionRow | null) {
-  if (!subscription?.tier || !subscription.end_date) {
+  if (!isSubscriptionActive(subscription)) {
     return false;
   }
 
@@ -125,7 +234,7 @@ export function canDirectMessageUsers(subscription: SubscriptionRow | null) {
     return false;
   }
 
-  return new Date(subscription.end_date).getTime() > Date.now();
+  return true;
 }
 
 export async function loadActiveSubscription(
@@ -157,4 +266,57 @@ export async function loadDirectMessageAccess(
     activeSubscription,
     canDirectMessageUsers: canDirectMessageUsers(activeSubscription),
   };
+}
+
+export async function saveVerifiedSubscription(
+  supabase: SupabaseClient<Database>,
+  {
+    userId,
+    plan,
+    txRef,
+    verifiedAt,
+    paymentStatus,
+    paymentReference,
+    amount,
+    currency,
+    referral,
+  }: {
+    userId: string;
+    plan: SubscriptionPlan;
+    txRef: string;
+    verifiedAt: string;
+    paymentStatus: string;
+    paymentReference: string | null;
+    amount: number | null;
+    currency: string | null;
+    referral: string | null;
+  },
+) {
+  const startDate = new Date(verifiedAt);
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + plan.durationDays);
+
+  const record = {
+    user_id: userId,
+    start_date: startDate.toISOString(),
+    end_date: endDate.toISOString(),
+    tier: plan.tier,
+    referral,
+    tx_ref: txRef,
+    payment_reference: paymentReference,
+    payment_status: paymentStatus,
+    amount: amount ?? plan.amount,
+    currency: currency ?? plan.currency,
+    verified_at: verifiedAt,
+  };
+
+  const { error } = await supabase
+    .from("subscription")
+    .upsert(record, { onConflict: "tx_ref" });
+
+  if (error) {
+    throw error;
+  }
+
+  return record;
 }
