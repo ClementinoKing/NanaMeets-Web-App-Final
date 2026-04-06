@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { Viewport } from "next";
+import Script from "next/script";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -13,6 +14,19 @@ const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
 });
+
+const themeInitScript = `
+(function() {
+  try {
+    var theme = localStorage.getItem("nanameets-theme");
+    if (!theme) {
+      theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    document.documentElement.style.colorScheme = theme;
+  } catch (error) {}
+})();
+`;
 
 export const metadata: Metadata = {
   title: "NanaMeets",
@@ -36,6 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${manrope.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
       <head>
@@ -43,7 +58,12 @@ export default function RootLayout({
           name="google-adsense-account"
           content="ca-pub-7322140828117790"
         />
-        <script
+        <Script
+          id="theme-init"
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+          strategy="beforeInteractive"
+        />
+        <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7322140828117790"
           crossOrigin="anonymous"

@@ -10,13 +10,16 @@ import {
   Home,
   LogOut,
   Search,
+  MoonStar,
   Sparkles,
   Ticket,
+  SunMedium,
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { formatUtcDateTime } from "@/lib/date-format";
+import { useTheme } from "@/app/providers";
 
 export interface SidebarConversationPreview {
   userId: string;
@@ -120,10 +123,11 @@ export function TinderSidebar({
   const searchParams = useSearchParams();
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
+  const { theme, setTheme } = useTheme();
   const [signingOut, setSigningOut] = useState(false);
   const [activeTab, setActiveTab] = useState<"messages" | "matches">("messages");
   const [searchTerm, setSearchTerm] = useState("");
-  const [readConversationMapState, setReadConversationMapState] = useState<Record<string, string>>({});
+  const [readConversationMapState, setReadConversationMapState] = useState<Record<string, string>>(() => readConversationMap());
 
   const homeActive = pathname === "/dashboard";
   const exploreActive = pathname.startsWith("/dashboard/discover");
@@ -181,10 +185,6 @@ export function TinderSidebar({
   };
 
   useEffect(() => {
-    setReadConversationMapState(readConversationMap());
-  }, []);
-
-  useEffect(() => {
     if (!selectedConversationId || pathname !== "/dashboard/inbox") {
       return;
     }
@@ -195,7 +195,9 @@ export function TinderSidebar({
     };
 
     writeConversationMap(nextMap);
-    setReadConversationMapState(nextMap);
+    const timeoutId = window.setTimeout(() => setReadConversationMapState(nextMap), 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [pathname, selectedConversationId]);
 
   return (
@@ -429,19 +431,35 @@ export function TinderSidebar({
       </div>
 
       <div className="border-t border-white/10 px-4 py-3">
-        <button
-          className="flex items-center gap-3 text-white transition-colors hover:text-white/[0.75]"
-          disabled={signingOut}
-          onClick={handleSignOut}
-          type="button"
-        >
-          <span className="flex h-9 w-9 items-center justify-center rounded-[0.8rem] border border-white/[0.75] text-white sm:h-10 sm:w-10">
-            <LogOut className="h-4 w-4 stroke-[2.1] sm:h-4.5 sm:w-4.5" />
-          </span>
-          <span className="font-heading text-[0.92rem] font-semibold leading-none tracking-tight sm:text-[0.98rem]">
-            {signingOut ? "Logging out..." : "Logout"}
-          </span>
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            aria-label="Logout"
+            className="flex h-11 flex-1 items-center gap-3 rounded-[0.8rem] border border-white/[0.75] px-3 text-left text-white transition-colors hover:border-white/[0.2] hover:bg-white/[0.08] sm:h-12"
+            disabled={signingOut}
+            onClick={handleSignOut}
+            type="button"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-[0.8rem] border border-white/[0.75] text-white sm:h-10 sm:w-10">
+              <LogOut className="h-4 w-4 stroke-[2.1] sm:h-4.5 sm:w-4.5" />
+            </span>
+            <span className="font-heading text-[0.92rem] font-semibold leading-none tracking-tight sm:text-[0.98rem]">
+              {signingOut ? "Logging out..." : "Logout"}
+            </span>
+          </button>
+
+          <button
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="flex h-11 w-11 items-center justify-center rounded-[0.8rem] border border-white/[0.75] text-white transition-colors hover:border-white/20 hover:bg-white/[0.08] sm:h-12 sm:w-12"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            type="button"
+          >
+            {theme === "dark" ? (
+              <SunMedium className="h-4 w-4 stroke-[2.1] sm:h-4.5 sm:w-4.5" />
+            ) : (
+              <MoonStar className="h-4 w-4 stroke-[2.1] sm:h-4.5 sm:w-4.5" />
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -127,9 +127,9 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
 
   return (
     <div className="h-[100dvh] overflow-hidden bg-white p-0 pb-[calc(env(safe-area-inset-bottom)+5rem)] md:bg-[#f5f6f8] md:p-4 md:pb-4 dark:bg-black">
-      <div className="h-full md:grid md:grid-cols-[minmax(300px,340px)_minmax(0,1fr)] md:gap-4">
-        <main className="order-1 h-full bg-white px-0 py-0 md:order-2 md:rounded-[2rem] md:bg-[#f7f8fa] md:px-6 md:py-6 lg:px-8 lg:py-8 dark:bg-black">
-          <div className="mx-auto h-full w-full max-w-6xl">{children}</div>
+      <div className="h-full min-h-0 md:grid md:grid-cols-[minmax(300px,340px)_minmax(0,1fr)] md:gap-4">
+        <main className="order-1 h-full min-h-0 overflow-y-auto bg-white px-0 py-0 md:order-2 md:rounded-[2rem] md:bg-[#f7f8fa] md:px-6 md:py-6 lg:px-8 lg:py-8 dark:bg-black">
+          <div className="mx-auto min-h-full w-full max-w-6xl">{children}</div>
         </main>
 
         <aside className="order-2 hidden border-t border-white/10 bg-[#070707] text-white md:order-1 md:block md:sticky md:top-4 md:h-[calc(100vh-2rem)] md:overflow-hidden md:rounded-[2rem] md:border md:border-white/10 md:shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
