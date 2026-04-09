@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, Loader2, LockKeyhole } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -13,10 +14,10 @@ import { signupSchema, type SignupValues } from "@/lib/validators/auth";
 export function SignupForm() {
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
-  const [formError, setFormError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const lastValidationToastSubmitCount = useRef(0);
 
   const form = useForm<SignupValues>({
     resolver: zodResolver(signupSchema),
@@ -28,6 +29,27 @@ export function SignupForm() {
     },
   });
 
+  useEffect(() => {
+    if (form.formState.submitCount === lastValidationToastSubmitCount.current) {
+      return;
+    }
+
+    if (!form.formState.isSubmitted || form.formState.isSubmitSuccessful) {
+      return;
+    }
+
+    const firstError =
+      form.formState.errors.email?.message ??
+      form.formState.errors.password?.message ??
+      form.formState.errors.confirmPassword?.message ??
+      form.formState.errors.acceptedTerms?.message;
+
+    if (firstError) {
+      toast.error(firstError);
+      lastValidationToastSubmitCount.current = form.formState.submitCount;
+    }
+  }, [form.formState.errors, form.formState.isSubmitSuccessful, form.formState.isSubmitted, form.formState.submitCount]);
+
   if (!supabase) {
     return (
       <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
@@ -37,7 +59,6 @@ export function SignupForm() {
   }
 
   const onGoogleSignIn = async () => {
-    setFormError(null);
     setIsGoogleLoading(true);
 
     const { error } = await supabase.auth.signInWithOAuth({
@@ -48,14 +69,12 @@ export function SignupForm() {
     });
 
     if (error) {
-      setFormError("We could not start Google sign-in right now.");
+      toast.error("We could not start Google sign-in right now.");
       setIsGoogleLoading(false);
     }
   };
 
   const onSubmit = async (values: SignupValues) => {
-    setFormError(null);
-
     const nameFromEmail = values.email.split("@")[0]?.replace(/[._-]+/g, " ").trim() || "NanaMeets User";
     const fullName = nameFromEmail
       .split(" ")
@@ -77,18 +96,16 @@ export function SignupForm() {
       const message = error.message.toLowerCase();
 
       if (message.includes("already registered") || message.includes("already exists")) {
-        form.setError("email", {
-          type: "manual",
-          message: "An account with this email already exists.",
-        });
+        toast.error("An account with this email already exists.");
       } else {
-        setFormError(error.message);
+        toast.error(error.message);
       }
 
       return;
     }
 
     if (data.session) {
+      toast.success("Your account is ready. Setting up your profile...");
       router.replace("/create-profile");
       router.refresh();
       return;
@@ -100,13 +117,15 @@ export function SignupForm() {
   };
 
   return (
-    <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
+    <form
+      className="grid gap-4"
+      onSubmit={form.handleSubmit(onSubmit, () => {
+        toast.error("Please fix the highlighted fields and try again.");
+      })}
+    >
       <label className="grid gap-2">
         <span className="text-sm font-medium text-slate-700">Email</span>
         <Input autoComplete="email" placeholder="Email" type="email" {...form.register("email")} />
-        {form.formState.errors.email ? (
-          <span className="text-sm text-[#c2410c]">{form.formState.errors.email.message}</span>
-        ) : null}
       </label>
 
       <label className="grid gap-2">
@@ -128,9 +147,6 @@ export function SignupForm() {
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {form.formState.errors.password ? (
-          <span className="text-sm text-[#c2410c]">{form.formState.errors.password.message}</span>
-        ) : null}
       </label>
 
       <label className="grid gap-2">
@@ -152,9 +168,6 @@ export function SignupForm() {
             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {form.formState.errors.confirmPassword ? (
-          <span className="text-sm text-[#c2410c]">{form.formState.errors.confirmPassword.message}</span>
-        ) : null}
       </label>
 
       <label className="flex items-center gap-3 rounded-2xl border border-transparent px-1 py-1 text-sm text-slate-600">
@@ -168,12 +181,6 @@ export function SignupForm() {
           <span className="font-semibold text-rose-500">Terms and Conditions</span>
         </span>
       </label>
-      {form.formState.errors.acceptedTerms ? (
-        <span className="text-sm text-[#c2410c]">{form.formState.errors.acceptedTerms.message}</span>
-      ) : null}
-
-      {formError ? <p className="rounded-2xl border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-800">{formError}</p> : null}
-
       <Button
         className="h-12 w-full rounded-2xl border-0 bg-[linear-gradient(135deg,_#e84056,_#f38aa0)] text-base font-semibold text-white shadow-[0_16px_36px_-18px_rgba(232,64,86,0.95)] transition hover:translate-y-[-1px] hover:opacity-95"
         disabled={form.formState.isSubmitting}

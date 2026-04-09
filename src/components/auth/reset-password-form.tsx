@@ -36,7 +36,6 @@ export function ResetPasswordForm() {
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
   const [mode, setMode] = useState<RecoveryMode>("checking");
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -89,13 +88,12 @@ export function ResetPasswordForm() {
         }
 
         if (error) {
-          setStatusMessage("This reset link is invalid or expired. Request a fresh one below.");
+          toast.error("This reset link is invalid or expired. Request a fresh one below.");
           setMode("request");
           return;
         }
 
         window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
-        setStatusMessage(null);
         setMode("recovery");
         return;
       }
@@ -121,7 +119,6 @@ export function ResetPasswordForm() {
       }
 
       if (event === "PASSWORD_RECOVERY" && session) {
-        setStatusMessage(null);
         setMode("recovery");
       }
     });
@@ -147,7 +144,7 @@ export function ResetPasswordForm() {
     }
 
     requestForm.reset();
-    setStatusMessage("If that email exists, we sent a reset link. Check your inbox and spam folder.");
+    toast.success("If that email exists, we sent a reset link. Check your inbox and spam folder.");
     setMode("requested");
   };
 
@@ -189,22 +186,12 @@ export function ResetPasswordForm() {
 
   return (
     <div className="grid gap-4">
-      {statusMessage ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900 shadow-sm">
-          {statusMessage}
-        </div>
-      ) : null}
-
       {mode === "requested" ? (
         <>
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">
-            We sent a password reset email. Open the link in that email to choose a new password.
-          </div>
           <Button
             className="h-12 w-full rounded-2xl border-0 bg-[linear-gradient(135deg,_#e84056,_#f38aa0)] text-base font-semibold text-white shadow-[0_16px_36px_-18px_rgba(232,64,86,0.95)] transition hover:translate-y-[-1px] hover:opacity-95"
             onClick={() => {
               setMode("request");
-              setStatusMessage(null);
             }}
             type="button"
           >
@@ -214,7 +201,12 @@ export function ResetPasswordForm() {
       ) : null}
 
       {mode === "request" ? (
-        <form className="grid gap-4" onSubmit={requestForm.handleSubmit(onRequestReset)}>
+        <form
+          className="grid gap-4"
+          onSubmit={requestForm.handleSubmit(onRequestReset, () => {
+            toast.error("Please enter a valid email address.");
+          })}
+        >
           <label className="grid gap-2">
             <span className="text-sm font-medium text-slate-700">Email</span>
             <Input
@@ -223,11 +215,6 @@ export function ResetPasswordForm() {
               type="email"
               {...requestForm.register("email")}
             />
-            {requestForm.formState.errors.email ? (
-              <span className="text-sm text-[#c2410c]">
-                {requestForm.formState.errors.email.message}
-              </span>
-            ) : null}
           </label>
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm">
@@ -250,7 +237,12 @@ export function ResetPasswordForm() {
       ) : null}
 
       {mode === "recovery" ? (
-        <form className="grid gap-4" onSubmit={passwordForm.handleSubmit(onUpdatePassword)}>
+        <form
+          className="grid gap-4"
+          onSubmit={passwordForm.handleSubmit(onUpdatePassword, () => {
+            toast.error("Please fix the password fields and try again.");
+          })}
+        >
           <div className="rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm">
             Choose a strong new password for your account.
           </div>
@@ -258,13 +250,13 @@ export function ResetPasswordForm() {
           <label className="grid gap-2">
             <span className="text-sm font-medium text-slate-700">New Password</span>
             <div className="relative">
-              <Input
-                autoComplete="new-password"
-                className="pr-12"
-                placeholder="New Password"
-                type={showPassword ? "text" : "password"}
-                {...passwordForm.register("password")}
-              />
+            <Input
+              autoComplete="new-password"
+              className="pr-12"
+              placeholder="New Password"
+              type={showPassword ? "text" : "password"}
+              {...passwordForm.register("password")}
+            />
               <button
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 transition hover:text-slate-950"
@@ -274,11 +266,6 @@ export function ResetPasswordForm() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {passwordForm.formState.errors.password ? (
-              <span className="text-sm text-[#c2410c]">
-                {passwordForm.formState.errors.password.message}
-              </span>
-            ) : null}
           </label>
 
           <label className="grid gap-2">
@@ -300,11 +287,6 @@ export function ResetPasswordForm() {
                 {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {passwordForm.formState.errors.confirmPassword ? (
-              <span className="text-sm text-[#c2410c]">
-                {passwordForm.formState.errors.confirmPassword.message}
-              </span>
-            ) : null}
           </label>
 
           <Button

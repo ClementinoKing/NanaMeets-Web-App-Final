@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, Loader2, LockKeyhole } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,7 @@ export function LoginForm({ registered, passwordReset, oauthError }: LoginFormPr
   const supabase = getSupabaseBrowserClient();
   const [showPassword, setShowPassword] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const lastValidationToastSubmitCount = useRef(0);
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -36,6 +37,35 @@ export function LoginForm({ registered, passwordReset, oauthError }: LoginFormPr
       toast.error("We could not complete Google sign-in. Please try again.");
     }
   }, [oauthError]);
+
+  useEffect(() => {
+    if (registered) {
+      toast.success("Your account is ready. Sign in to continue.");
+    }
+  }, [registered]);
+
+  useEffect(() => {
+    if (passwordReset) {
+      toast.success("Your password was updated. Sign in with your new password.");
+    }
+  }, [passwordReset]);
+
+  useEffect(() => {
+    if (form.formState.submitCount === lastValidationToastSubmitCount.current) {
+      return;
+    }
+
+    if (!form.formState.isSubmitted || form.formState.isSubmitSuccessful) {
+      return;
+    }
+
+    const firstError = form.formState.errors.email?.message ?? form.formState.errors.password?.message;
+
+    if (firstError) {
+      toast.error(firstError);
+      lastValidationToastSubmitCount.current = form.formState.submitCount;
+    }
+  }, [form.formState.errors, form.formState.isSubmitSuccessful, form.formState.isSubmitted, form.formState.submitCount]);
 
   if (!supabase) {
     return (
@@ -82,24 +112,9 @@ export function LoginForm({ registered, passwordReset, oauthError }: LoginFormPr
 
   return (
     <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
-      {registered ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900 shadow-sm">
-          Your account is ready. Sign in to continue.
-        </div>
-      ) : null}
-
-      {passwordReset ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900 shadow-sm">
-          Your password was updated. Sign in with your new password.
-        </div>
-      ) : null}
-
       <label className="grid gap-2">
         <span className="text-sm font-medium text-slate-700">Email</span>
         <Input autoComplete="email" placeholder="Email" type="email" {...form.register("email")} />
-        {form.formState.errors.email ? (
-          <span className="text-sm text-[#c2410c]">{form.formState.errors.email.message}</span>
-        ) : null}
       </label>
 
       <label className="grid gap-2">
@@ -121,9 +136,6 @@ export function LoginForm({ registered, passwordReset, oauthError }: LoginFormPr
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {form.formState.errors.password ? (
-          <span className="text-sm text-[#c2410c]">{form.formState.errors.password.message}</span>
-        ) : null}
       </label>
 
       <div className="flex items-center justify-end">

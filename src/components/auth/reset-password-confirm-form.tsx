@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff, Loader2, LockKeyhole } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,6 +33,7 @@ export function ResetPasswordConfirmForm() {
   const [mode, setMode] = useState<ConfirmMode>("checking");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const invalidToastShown = useRef(false);
 
   const passwordForm = useForm<ConfirmPasswordValues>({
     resolver: zodResolver(confirmPasswordSchema),
@@ -68,6 +69,8 @@ export function ResetPasswordConfirmForm() {
         }
 
         if (error) {
+          toast.error("This reset link is missing or expired. Please request a fresh one.");
+          invalidToastShown.current = true;
           setMode("invalid");
           return;
         }
@@ -85,7 +88,17 @@ export function ResetPasswordConfirmForm() {
         return;
       }
 
-      setMode(session ? "recovery" : "invalid");
+      if (session) {
+        setMode("recovery");
+        return;
+      }
+
+      if (!invalidToastShown.current) {
+        toast.error("This reset link is missing or expired. Please request a fresh one.");
+        invalidToastShown.current = true;
+      }
+
+      setMode("invalid");
     };
 
     void bootstrapRecoveryState();
@@ -147,9 +160,6 @@ export function ResetPasswordConfirmForm() {
   if (mode === "invalid") {
     return (
       <div className="grid gap-4">
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm">
-          This password reset link is missing or expired. Please request a fresh one from the reset page.
-        </div>
         <Button
           className="h-12 w-full rounded-2xl border-0 bg-[linear-gradient(135deg,_#e84056,_#f38aa0)] text-base font-semibold text-white shadow-[0_16px_36px_-18px_rgba(232,64,86,0.95)] transition hover:translate-y-[-1px] hover:opacity-95"
           onClick={() => router.replace("/resetPassword")}
@@ -162,7 +172,12 @@ export function ResetPasswordConfirmForm() {
   }
 
   return (
-    <form className="grid gap-4" onSubmit={passwordForm.handleSubmit(onUpdatePassword)}>
+    <form
+      className="grid gap-4"
+      onSubmit={passwordForm.handleSubmit(onUpdatePassword, () => {
+        toast.error("Please fix the password fields and try again.");
+      })}
+    >
       <div className="rounded-2xl border border-slate-200 bg-slate-50/90 px-4 py-3 text-sm leading-6 text-slate-600 shadow-sm">
         Choose a strong new password for your account.
       </div>
@@ -186,9 +201,6 @@ export function ResetPasswordConfirmForm() {
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {passwordForm.formState.errors.password ? (
-          <span className="text-sm text-[#c2410c]">{passwordForm.formState.errors.password.message}</span>
-        ) : null}
       </label>
 
       <label className="grid gap-2">
@@ -210,11 +222,6 @@ export function ResetPasswordConfirmForm() {
             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
         </div>
-        {passwordForm.formState.errors.confirmPassword ? (
-          <span className="text-sm text-[#c2410c]">
-            {passwordForm.formState.errors.confirmPassword.message}
-          </span>
-        ) : null}
       </label>
 
       <Button
