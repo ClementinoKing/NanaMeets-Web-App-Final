@@ -5,6 +5,7 @@ import { LoginForm } from "@/components/auth/login-form";
 interface LoginPageProps {
   searchParams?: Promise<{
     registered?: string;
+    reset?: string;
     error?: string;
   }>;
 }
@@ -12,6 +13,7 @@ interface LoginPageProps {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const registered = resolvedSearchParams.registered === "1";
+  const passwordReset = resolvedSearchParams.reset === "1";
   const oauthError = resolvedSearchParams.error === "oauth";
 
   return (
@@ -37,7 +39,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       </header>
 
       <div className="mt-8">
-        <LoginForm oauthError={oauthError} registered={registered} />
+        <LoginForm oauthError={oauthError} passwordReset={passwordReset} registered={registered} />
       </div>
 
       <p className="mt-8 text-center text-sm text-slate-600">

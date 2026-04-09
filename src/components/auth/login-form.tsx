@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Eye, EyeOff, Loader2, LockKeyhole } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -13,10 +14,11 @@ import { loginSchema, type LoginValues } from "@/lib/validators/auth";
 
 interface LoginFormProps {
   registered?: boolean;
+  passwordReset?: boolean;
   oauthError?: boolean;
 }
 
-export function LoginForm({ registered, oauthError }: LoginFormProps) {
+export function LoginForm({ registered, passwordReset, oauthError }: LoginFormProps) {
   const router = useRouter();
   const supabase = getSupabaseBrowserClient();
   const [showPassword, setShowPassword] = useState(false);
@@ -86,6 +88,12 @@ export function LoginForm({ registered, oauthError }: LoginFormProps) {
         </div>
       ) : null}
 
+      {passwordReset ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-900 shadow-sm">
+          Your password was updated. Sign in with your new password.
+        </div>
+      ) : null}
+
       <label className="grid gap-2">
         <span className="text-sm font-medium text-slate-700">Email</span>
         <Input autoComplete="email" placeholder="Email" type="email" {...form.register("email")} />
@@ -119,12 +127,9 @@ export function LoginForm({ registered, oauthError }: LoginFormProps) {
       </label>
 
       <div className="flex items-center justify-end">
-        <button
-          className="text-sm font-medium text-slate-500 transition hover:text-slate-950"
-          type="button"
-        >
+        <Link className="text-sm font-medium text-slate-500 transition hover:text-slate-950" href="/resetPassword">
           Forgot Password?
-        </button>
+        </Link>
       </div>
 
       <Button

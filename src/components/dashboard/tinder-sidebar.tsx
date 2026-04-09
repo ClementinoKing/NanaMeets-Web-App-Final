@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import {
   Heart,
@@ -87,17 +87,32 @@ function SidebarBadge({ children }: { children: ReactNode }) {
 }
 
 const READ_CONVERSATIONS_STORAGE_KEY = "nanameets_read_conversations";
+const READ_CONVERSATIONS_UPDATE_EVENT = "nanameets-read-conversations-updated";
+const EMPTY_CONVERSATION_MAP: Record<string, string> = {};
+
+let cachedConversationMapRaw: string | null = null;
+let cachedConversationMapValue: Record<string, string> = EMPTY_CONVERSATION_MAP;
 
 function readConversationMap() {
   if (typeof window === "undefined") {
-    return {};
+    return EMPTY_CONVERSATION_MAP;
   }
 
   try {
     const raw = window.localStorage.getItem(READ_CONVERSATIONS_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+
+    if (raw === cachedConversationMapRaw) {
+      return cachedConversationMapValue;
+    }
+
+    cachedConversationMapRaw = raw;
+    cachedConversationMapValue = raw ? (JSON.parse(raw) as Record<string, string>) : EMPTY_CONVERSATION_MAP;
+
+    return cachedConversationMapValue;
   } catch {
-    return {};
+    cachedConversationMapRaw = null;
+    cachedConversationMapValue = EMPTY_CONVERSATION_MAP;
+    return EMPTY_CONVERSATION_MAP;
   }
 }
 
@@ -106,7 +121,31 @@ function writeConversationMap(nextMap: Record<string, string>) {
     return;
   }
 
-  window.localStorage.setItem(READ_CONVERSATIONS_STORAGE_KEY, JSON.stringify(nextMap));
+  const nextRaw = JSON.stringify(nextMap);
+  cachedConversationMapRaw = nextRaw;
+  cachedConversationMapValue = nextMap;
+  window.localStorage.setItem(READ_CONVERSATIONS_STORAGE_KEY, nextRaw);
+  window.dispatchEvent(new Event(READ_CONVERSATIONS_UPDATE_EVENT));
+}
+
+function subscribeToConversationMapChange(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === READ_CONVERSATIONS_STORAGE_KEY) {
+      onStoreChange();
+    }
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(READ_CONVERSATIONS_UPDATE_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(READ_CONVERSATIONS_UPDATE_EVENT, onStoreChange);
+  };
 }
 
 export function TinderSidebar({
@@ -127,7 +166,11 @@ export function TinderSidebar({
   const [signingOut, setSigningOut] = useState(false);
   const [activeTab, setActiveTab] = useState<"messages" | "matches">("messages");
   const [searchTerm, setSearchTerm] = useState("");
-  const [readConversationMapState, setReadConversationMapState] = useState<Record<string, string>>(() => readConversationMap());
+  const readConversationMapState = useSyncExternalStore(
+    subscribeToConversationMapChange,
+    readConversationMap,
+    () => EMPTY_CONVERSATION_MAP
+  );
 
   const homeActive = pathname === "/dashboard";
   const exploreActive = pathname.startsWith("/dashboard/discover");
@@ -195,9 +238,6 @@ export function TinderSidebar({
     };
 
     writeConversationMap(nextMap);
-    const timeoutId = window.setTimeout(() => setReadConversationMapState(nextMap), 0);
-
-    return () => window.clearTimeout(timeoutId);
   }, [pathname, selectedConversationId]);
 
   return (
