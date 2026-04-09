@@ -57,10 +57,10 @@ export function ResetPasswordForm() {
 
   const redirectTo = useMemo(() => {
     if (typeof window === "undefined") {
-      return "/resetPassword";
+      return "/resetPassword/confirm";
     }
 
-    return `${window.location.origin}/resetPassword`;
+    return `${window.location.origin}/resetPassword/confirm`;
   }, []);
 
   useEffect(() => {
