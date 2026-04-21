@@ -4,6 +4,7 @@ import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { PresenceSync } from "@/components/auth/presence-sync";
+import { OfflineBanner } from "@/components/pwa/offline-banner";
 
 const ENABLE_PRESENCE_SYNC = process.env.NEXT_PUBLIC_ENABLE_PRESENCE_SYNC === "true";
 const THEME_STORAGE_KEY = "nanameets-theme";
@@ -57,6 +58,44 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
     applyTheme(nextTheme);
   }, []);
 
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) {
+      return;
+    }
+
+    const shouldRegister =
+      window.location.protocol === "https:" ||
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+
+    if (!shouldRegister) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const registerServiceWorker = async () => {
+      try {
+        const registration = await navigator.serviceWorker.register("/sw.js", {
+          scope: "/",
+          updateViaCache: "none",
+        });
+
+        if (!cancelled) {
+          void registration.update();
+        }
+      } catch {
+        // Ignore registration failures in unsupported or misconfigured environments.
+      }
+    };
+
+    void registerServiceWorker();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const setTheme = React.useCallback((nextTheme: Theme) => {
     setThemeState(nextTheme);
     window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
@@ -80,6 +119,7 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
     <ThemeContext.Provider value={themeContextValue}>
       <QueryClientProvider client={queryClient}>
         {ENABLE_PRESENCE_SYNC ? <PresenceSync /> : null}
+        <OfflineBanner />
         {children}
         <Toaster richColors theme={theme} position="top-right" />
       </QueryClientProvider>

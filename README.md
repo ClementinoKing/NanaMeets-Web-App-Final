@@ -38,4 +38,12 @@ npm run dev
 - Protected dashboard shell
 - Profile editing
 - Direct messages and inbox actions
+
+## PWA
+
+- Installable manifest at `src/app/manifest.ts`
+- Shared service worker at `public/sw.js`
+- Install prompts on the landing page and authenticated dashboard shell
+- Offline fallback page at `public/offline.html`
+- For local PWA testing, use HTTPS-capable dev mode so the browser can register the service worker
 # NanaMeets-Web-App-Final

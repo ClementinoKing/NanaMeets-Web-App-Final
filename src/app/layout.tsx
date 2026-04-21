@@ -16,7 +16,9 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "NanaMeets",
+  applicationName: "NanaMeets",
   description: "NanaMeets web platform for shared profiles, messages, and inbox management.",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: "/Fav-Icon.svg",
   },
@@ -44,6 +46,13 @@ export default function RootLayout({
           name="google-adsense-account"
           content="ca-pub-7322140828117790"
         />
+        <meta name="theme-color" content="#0b0b0b" />
+        <meta name="application-name" content="NanaMeets" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="NanaMeets" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
       </head>
       <body className="min-h-dvh bg-background text-foreground">
         <Providers>{children}</Providers>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, Download, MessageCircle, Users } from "lucide-react";
+import { PwaInstallPrompt } from "@/components/pwa/install-prompt";
 
 const stats = [
   {
@@ -324,6 +325,10 @@ export default function HomePage() {
             <span className="block">Download the app</span>
             <span className="block">and start connecting</span>
           </h2>
+
+          <div className="mx-auto mb-10 max-w-3xl">
+            <PwaInstallPrompt variant="hero" />
+          </div>
 
           <div className="mb-12 flex flex-col items-center justify-center gap-8 sm:flex-row">
             <a
