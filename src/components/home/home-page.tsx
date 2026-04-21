@@ -327,7 +327,7 @@ export default function HomePage() {
           </h2>
 
           <div className="mx-auto mb-10 max-w-3xl">
-            <PwaInstallPrompt variant="hero" />
+            <PwaInstallPrompt variant="banner" />
           </div>
 
           <div className="mb-12 flex flex-col items-center justify-center gap-8 sm:flex-row">
